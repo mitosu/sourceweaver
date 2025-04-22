@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<h1>Usuarios</h1>
+<a class="btn btn-primary mb-3" href="{{ path('user_new') }}">Crear nuevo usuario</a>
+<table class="table">
+    <thead>
+        <tr><th>ID</th><th>Email</th><th>Roles</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.roles|join(', ') }}</td>
+            <td>
+                <a href="{{ path('user_edit', {id: user.id}) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

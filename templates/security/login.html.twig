@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5" style="max-width: 400px;">
+    <h2 class="mb-4">Iniciar sesión</h2>
+    {% if error %}
+        <div class="alert alert-danger">Credenciales inválidas</div>
+    {% endif %}
+    <form method="post">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        <div class="mb-3">
+            <label for="email" class="form-label">Correo</label>
+            <input type="email" name="email" class="form-control" value="{{ last_username }}" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">Entrar</button>
+    </form>
+</div>
+{% endblock %}

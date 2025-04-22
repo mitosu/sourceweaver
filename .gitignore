@@ -1,0 +1,25 @@
+# Symfony
+/var/
+/vendor/
+/.env.local
+.env.test.local
+.env.dev.local
+.env.prod.local
+/public/bundles/
+/config/secrets/dev/dev.*
+/config/secrets/test/test.*
+/config/secrets/prod/prod.*
+
+# Logs y cache
+*.log
+*.cache
+
+# IDEs y entornos de desarrollo
+/.vscode/
+/.idea/
+/*.sublime-project
+/*.sublime-workspace
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

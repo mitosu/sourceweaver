@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<h1>Bienvenido, {{ app.user.email }}</h1>
+<p>Rol(es): {{ app.user.roles|join(', ') }}</p>
+
+{% if 'ROLE_ADMIN' in app.user.roles %}
+    <div class="alert alert-info mt-4">Tienes acceso como administrador.</div>
+{% elseif 'ROLE_SUPERVISOR' in app.user.roles %}
+    <div class="alert alert-success mt-4">Tienes acceso como supervisor.</div>
+{% else %}
+    <div class="alert alert-secondary mt-4">Acceso limitado a tus documentos.</div>
+{% endif %}
+{% endblock %}

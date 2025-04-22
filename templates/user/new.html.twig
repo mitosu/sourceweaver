@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<h1>Nuevo Usuario</h1>
+{{ form_start(form) }}
+    {{ form_row(form.email) }}
+    {{ form_row(form.password) }}
+    {{ form_row(form.roles) }}
+    <button class="btn btn-success mt-2">Guardar</button>
+{{ form_end(form) }}
+{% endblock %}

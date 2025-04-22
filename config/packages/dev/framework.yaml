@@ -1,0 +1,6 @@
+# config/packages/dev/framework.yaml
+framework:
+    cache:
+        directory: '%kernel.project_dir%/var/cache'
+    profiler:
+        only_exceptions: false

@@ -1,0 +1,15 @@
+.git/
+.gitignore
+.dockerignore
+.env.local
+.env.*
+var/
+vendor/
+node_modules/
+tests/
+phpunit.xml
+.idea/
+.vscode/
+composer.lock
+*.log
+.DS_Store

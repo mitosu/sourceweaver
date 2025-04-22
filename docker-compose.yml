@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  php:
+    build:
+      context: ./docker/php
+    container_name: ironwhisper_php
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    expose:
+      - "9000"
+    depends_on:
+      - db
+    networks:
+      - symfony
+
+  web:
+    image: nginx:alpine
+    container_name: ironwhisper_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - symfony
+
+  db:
+    image: mysql:8
+    container_name: ironwhisper_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ironwhisper
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - ironwhisper_db_data:/var/lib/mysql
+    networks:
+      - symfony
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ironwhisper_rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - symfony
+
+volumes:
+  ironwhisper_db_data:
+
+networks:
+  symfony:
