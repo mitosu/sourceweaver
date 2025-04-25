@@ -19,8 +19,11 @@ security:
       provider: app_user_provider
       custom_authenticators:
         - App\Security\LoginAuthenticator
+      entry_point: App\Security\LoginAuthenticator
       logout:
         path: app_logout
+        # where to redirect after logout
+        # target: app_any_route
 
   access_control:
     - { path: ^/login, roles: PUBLIC_ACCESS }

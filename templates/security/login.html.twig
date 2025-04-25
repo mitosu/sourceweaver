@@ -1,22 +1,45 @@
 {% extends 'base.html.twig' %}
 
-{% block body %}
-<div class="container mt-5" style="max-width: 400px;">
-    <h2 class="mb-4">Iniciar sesión</h2>
-    {% if error %}
-        <div class="alert alert-danger">Credenciales inválidas</div>
-    {% endif %}
-    <form method="post">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-        <div class="mb-3">
-            <label for="email" class="form-label">Correo</label>
-            <input type="email" name="email" class="form-control" value="{{ last_username }}" required autofocus>
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block page_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            {% if error %}
+                <div class="alert alert-danger">
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            <div class="card shadow">
+                <div class="card-header text-center bg-primary text-white">
+                    <h5 class="mb-0">Inicio de sesión</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Correo electrónico</label>
+                            <input type="email" name="email" value="{{ last_username }}" id="email"
+                                   class="form-control" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <input type="password" name="password" id="password" class="form-control" required>
+                        </div>
+
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                        <div class="d-grid">
+                            <button class="btn btn-primary" type="submit">Entrar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <p class="text-center mt-3 text-muted">IRONWHISPER © 2025</p>
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input type="password" name="password" class="form-control" required>
-        </div>
-        <button class="btn btn-primary w-100" type="submit">Entrar</button>
-    </form>
+    </div>
 </div>
 {% endblock %}

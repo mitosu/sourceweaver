@@ -34,3 +34,12 @@ rabbitmq:
 fix-perms:
 	sudo chown -R $$(id -u):$$(id -g) var
 	sudo chmod -R 775 var
+
+fix-permissions:
+	@echo "Corrigiendo permisos de archivos..."
+	sudo chown -R $(shell id -u):$(shell id -g) .
+	@echo "Permisos corregidos correctamente."
+
+# Target para ejecutar comandos específicos de Symfony
+symfony-command:
+	docker-compose exec php php bin/console $(cmd)

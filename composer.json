@@ -25,7 +25,9 @@
       "doctrine/doctrine-migrations-bundle": "^3.4",
       "doctrine/doctrine-fixtures-bundle": "^4.0",
       "aws/aws-sdk-php": "^3.300",
-        "symfony/dotenv": "^7.2"
+        "symfony/dotenv": "^7.2",
+        "symfony/uid": "^7.2",
+        "symfony/mailer": "^7.2"
     },
     "require-dev": {
       "symfony/debug-bundle": "^7.2",
