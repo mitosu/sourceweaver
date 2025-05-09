@@ -5,38 +5,21 @@
 {% block page_content %}
 <div class="container-fluid">
     <div class="row">
-        <nav class="col-md-2 d-none d-md-block sidebar py-3">
-            <div class="px-3">
-                <h5 class="text-white mb-4">IRONWHISPER</h5>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('dashboard') }}">📊 Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#">📁 Documentos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#">🔔 Notificaciones</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#">👤 Usuarios</a>
-                    </li>
-                    <li class="nav-item mt-4">
-                        <a class="btn btn-outline-light w-100" href="{{ path('app_logout') }}">Salir</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+        {% include 'partials/_sidebar.html.twig' %}
 
-        <main class="col-md-10 ms-sm-auto px-4 py-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h3 class="card-title">Bienvenido, {{ app.user.email }}</h3>
-                    <p class="card-text text-muted">Tu ID (UUID): {{ app.user.id }}</p>
-                    <p>Este es tu panel principal. Aquí podrás ver y gestionar tus documentos confidenciales.</p>
+        <div class="col-md-10 ms-sm-auto px-0">
+            {% include 'partials/_topbar.html.twig' %}
+
+            <main class="px-4 py-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title">Bienvenido, {{ app.user.email }}</h3>
+                        <p class="card-text text-muted">Tu ID (UUID): {{ app.user.id }}</p>
+                        <p>Este es tu panel principal. Aquí podrás ver y gestionar tus documentos confidenciales.</p>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 </div>
 {% endblock %}

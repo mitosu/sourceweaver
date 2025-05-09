@@ -1,0 +1,25 @@
+<nav class="col-md-2 d-none d-md-block sidebar py-3">
+    <div class="d-flex flex-column justify-content-between h-100 px-3">
+        <div>
+            <h5 class="text-white mb-4">IRONWHISPER</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('dashboard') }}">📊 Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#">📁 Documentos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#">🔔 Notificaciones</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#">👤 Usuarios</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mt-4">
+            <a class="btn btn-outline-light w-100" href="{{ path('app_logout') }}">Salir</a>
+        </div>
+    </div>
+</nav>
