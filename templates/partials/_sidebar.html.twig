@@ -1,25 +1,40 @@
-<nav class="col-md-2 d-none d-md-block sidebar py-3">
+<nav id="sidebar" class="sidebar position-fixed top-0 start-0 h-100">
     <div class="d-flex flex-column justify-content-between h-100 px-3">
         <div>
-            <h5 class="text-white mb-4">IRONWHISPER</h5>
+            <h5 class="text-white mb-4 sidebar-title">IRONWHISPER</h5>
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ path('dashboard') }}">📊 Dashboard</a>
+                    <a class="nav-link" href="{{ path('dashboard') }}">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        <span class="sidebar-label">Dashboard</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled" href="#">📁 Documentos</a>
+                    <a class="nav-link disabled" href="#">
+                        <i class="bi bi-folder2-open me-2"></i>
+                        <span class="sidebar-label">Documentos</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled" href="#">🔔 Notificaciones</a>
+                    <a class="nav-link disabled" href="#">
+                        <i class="bi bi-bell me-2"></i>
+                        <span class="sidebar-label">Notificaciones</span>
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled" href="#">👤 Usuarios</a>
+                    <a class="nav-link disabled" href="#">
+                        <i class="bi bi-people me-2"></i>
+                        <span class="sidebar-label">Usuarios</span>
+                    </a>
                 </li>
             </ul>
         </div>
 
         <div class="mt-4">
-            <a class="btn btn-outline-light w-100" href="{{ path('app_logout') }}">Salir</a>
+            <a class="btn btn-outline-light w-100" href="{{ path('app_logout') }}">
+                <i class="bi bi-box-arrow-left me-2"></i>
+                <span class="sidebar-label">Salir</span>
+            </a>
         </div>
     </div>
 </nav>

@@ -2,24 +2,12 @@
 
 {% block title %}Dashboard{% endblock %}
 
-{% block page_content %}
-<div class="container-fluid">
-    <div class="row">
-        {% include 'partials/_sidebar.html.twig' %}
-
-        <div class="col-md-10 ms-sm-auto px-0">
-            {% include 'partials/_topbar.html.twig' %}
-
-            <main class="px-4 py-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h3 class="card-title">Bienvenido, {{ app.user.email }}</h3>
-                        <p class="card-text text-muted">Tu ID (UUID): {{ app.user.id }}</p>
-                        <p>Este es tu panel principal. Aquí podrás ver y gestionar tus documentos confidenciales.</p>
-                    </div>
-                </div>
-            </main>
-        </div>
+{% block main_content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h3 class="card-title">Bienvenido, {{ app.user.email }}</h3>
+        <p class="card-text text-muted">Tu ID (UUID): {{ app.user.id }}</p>
+        <p>Este es tu panel principal. Aquí podrás ver y gestionar tus documentos confidenciales.</p>
     </div>
 </div>
 {% endblock %}
