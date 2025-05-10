@@ -1,37 +1,31 @@
 <nav id="sidebar" class="sidebar position-fixed top-0 start-0 h-100">
     <div class="d-flex flex-column justify-content-between h-100 px-3">
         <div>
-            <h5 class="text-white mb-4 sidebar-title">IRONWHISPER</h5>
+            <h5 class="text-white mb-4 sidebar-title" style="margin-top: 15px;">IRONWHISPER</h5>
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('dashboard') }}">
-                        <i class="bi bi-speedometer2 me-2"></i>
-                        <span class="sidebar-label">Dashboard</span>
+                        <i class="bi bi-house-door me-2"></i>
+                        <span class="sidebar-label">Home</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled" href="#">
-                        <i class="bi bi-folder2-open me-2"></i>
-                        <span class="sidebar-label">Documentos</span>
+                    <a class="nav-link" href="#">
+                        <i class="bi bi-briefcase me-2"></i>
+                        <span class="sidebar-label">My Work</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled" href="#">
-                        <i class="bi bi-bell me-2"></i>
-                        <span class="sidebar-label">Notificaciones</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link disabled" href="#">
-                        <i class="bi bi-people me-2"></i>
-                        <span class="sidebar-label">Usuarios</span>
+                    <a class="nav-link" href="#">
+                        <i class="bi bi-person-workspace me-2"></i>
+                        <span class="sidebar-label">Workspaces</span>
                     </a>
                 </li>
             </ul>
         </div>
 
         <div class="mt-4">
-            <a class="btn btn-outline-light w-100" href="{{ path('app_logout') }}">
+            <a class="btn btn-outline-light w-100" href="{{ path('app_logout') }}" style="margin-bottom: 15px;">
                 <i class="bi bi-box-arrow-left me-2"></i>
                 <span class="sidebar-label">Salir</span>
             </a>
