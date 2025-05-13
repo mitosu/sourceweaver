@@ -15,11 +15,35 @@
                         <span class="sidebar-label">My Work</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
                         <i class="bi bi-person-workspace me-2"></i>
                         <span class="sidebar-label">Workspaces</span>
+                        <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
                     </a>
+
+                    <ul class="nav nav-treeview">
+                        {% for ws in workspaces %}
+                            <li class="nav-item has-treeview">
+                                <a href="#" class="nav-link">
+                                    <i class="bi bi-folder2 me-2"></i>
+                                    <span>{{ ws.name }}</span>
+                                    <i class="bi bi-chevron-down ms-auto toggle-icon"></i>
+                                </a>
+
+                                <ul class="nav nav-treeview">
+                                    {% for route in ws.routes %}
+                                        <li class="nav-item">
+                                            <a href="javascript:void(0);" class="nav-link">
+                                                <i class="bi {{ route.icon }} me-2"></i>
+                                                <span>{{ route.label }}</span>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </li>
             </ul>
         </div>
