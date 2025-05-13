@@ -13,7 +13,7 @@ final class DashboardController extends AbstractController
     {
         $workspaces = [
             [
-                'name' => 'MCEI - Administración',
+                'name' => 'Administración',
                 'id' => 1,
                 'routes' => [
                     ['label' => 'Overview', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => 1]],
@@ -21,7 +21,7 @@ final class DashboardController extends AbstractController
                 ]
             ],
             [
-                'name' => 'Software&Development',
+                'name' => 'Development',
                 'id' => 2,
                 'routes' => [
                     ['label' => 'Overview', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => 2]],
@@ -29,7 +29,7 @@ final class DashboardController extends AbstractController
                 ]
             ],
         ];
-        
+
         return $this->render('dashboard/index.html.twig', [
             'controller_name' => 'DashboardController',
             'workspaces' => $workspaces

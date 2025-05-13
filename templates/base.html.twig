@@ -45,6 +45,10 @@
             display: none;
         }
 
+        .sidebar-collapsed .toggle-icon {
+            display: none !important;
+        }
+
         /* Contenedor principal alineado con sidebar */
         #main-content {
             margin-left: 240px;
@@ -78,16 +82,21 @@
             padding-left: 1rem;
         }
 
+        .nav-treeview .nav-link {
+            font-size: 0.8rem;
+            padding-right: 1rem;
+        }
+
         .nav-item.has-treeview > .nav-link {
             cursor: pointer;
         }
 
-        .nav-item.has-treeview > .nav-link .toggle-icon {
+        .nav-link .toggle-icon {
             transition: transform 0.3s ease;
         }
 
-        .nav-item.open > .nav-link .toggle-icon {
-            transform: rotate(90deg);
+        .toggle-icon {
+            transition: all 0.3s ease;
         }
 
         .nav-item.open > .nav-treeview {
@@ -112,6 +121,7 @@
 
         .toggle-icon {
             font-size: 0.875rem;
+            transition: transform 0.3s ease;
         }
         .sidebar .nav-item {
             margin-bottom: 0.5rem;
@@ -124,7 +134,16 @@
             padding: 0 !important;
         }
 
+        .sidebar .nav-link.active {
+            background-color:rgb(69, 253, 13) !important;  /* Azul Bootstrap o cambia al que quieras */
+            color: #fff !important;
+            font-weight: 500;
+        }
 
+        /* Asegura que los íconos también cambien de color */
+        .sidebar .nav-link.active i {
+            color: #fff !important;
+        }
     </style>
 
     {% block stylesheets %}{% endblock %}
@@ -153,24 +172,35 @@
         toggleBtn?.addEventListener('click', function () {
             const collapsed = body.classList.toggle('sidebar-collapsed');
 
-            // Al colapsar: cerrar todos los menús abiertos
+            // Al colapsar: cerrar todos los submenús abiertos y restaurar iconos
             if (collapsed) {
                 document.querySelectorAll('.nav-item.has-treeview.open').forEach(item => {
                     item.classList.remove('open');
+
+                    const icon = item.querySelector('.toggle-icon');
+                    if (icon) {
+                        icon.classList.remove('bi-chevron-down');
+                        icon.classList.add('bi-chevron-left');
+                    }
                 });
             }
         });
 
-        // Submenús tipo treeview
         document.querySelectorAll('.nav-item.has-treeview > .nav-link').forEach(link => {
             link.addEventListener('click', function (e) {
                 e.preventDefault();
 
-                // No expandir submenús si el sidebar está colapsado
                 if (document.body.classList.contains('sidebar-collapsed')) return;
 
                 const parent = this.closest('.nav-item.has-treeview');
                 parent.classList.toggle('open');
+
+                const icon = this.querySelector('.toggle-icon');
+                if (icon) {
+                    const isOpen = parent.classList.contains('open');
+                    icon.classList.toggle('bi-chevron-left', !isOpen);
+                    icon.classList.toggle('bi-chevron-down', isOpen);
+                }
             });
         });
     });
