@@ -1,0 +1,28 @@
+name: Sync GitHub to CodeCommit
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set Git config
+        run: |
+          git config --global user.name "GitHub Sync Bot"
+          git config --global user.email "bot@ironwhisper.com"
+
+      - name: Push to CodeCommit
+        env:
+          CODECOMMIT_URL: ${{ secrets.CODECOMMIT_URL }}
+          CODECOMMIT_USERNAME: ${{ secrets.CODECOMMIT_USERNAME }}
+          CODECOMMIT_PASSWORD: ${{ secrets.CODECOMMIT_PASSWORD }}
+        run: |
+          git remote add codecommit https://$CODECOMMIT_USERNAME:$CODECOMMIT_PASSWORD@${CODECOMMIT_URL#https://}
+          git push codecommit master --force
