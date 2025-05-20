@@ -25,4 +25,4 @@ jobs:
           CODECOMMIT_PASSWORD: ${{ secrets.CODECOMMIT_PASSWORD }}
         run: |
           git remote add codecommit https://$CODECOMMIT_USERNAME:$CODECOMMIT_PASSWORD@${CODECOMMIT_URL#https://}
-          git push codecommit master --force
+          git push --mirror codecommit
