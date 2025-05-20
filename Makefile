@@ -1,7 +1,7 @@
 .PHONY: up down restart php bash logs install symfony dbshell rabbitmq
 
 up:
-	@echo "Iniciando contenedores..."
+	@echo "Iniciando contenedores.."
 	docker-compose up -d --build
 
 down:
