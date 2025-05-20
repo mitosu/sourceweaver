@@ -1,0 +1,11 @@
+pipelines:
+  branches:
+    master:
+      - step:
+          name: Sync to CodeCommit
+          image: atlassian/default-image:3
+          script:
+            - git config --global user.name "Bitbucket Sync Bot"
+            - git config --global user.email "sync@ironwhisper.com"
+            - git remote add codecommit https://$CODECOMMIT_USERNAME:$CODECOMMIT_PASSWORD@$CODECOMMIT_URL
+            - git push --mirror codecommit
