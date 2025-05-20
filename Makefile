@@ -4,6 +4,7 @@ up:
 	@echo "Iniciando contenedores..."
 	@echo "Asegúrate de que Docker esté en ejecución."
 	@echo "Reconstruyendo imágenes..."
+	@echo "Iniciando contenedores en segundo plano..."
 	docker-compose up -d --build
 
 down:
