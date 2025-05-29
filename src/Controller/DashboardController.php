@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\Workspace\GetUserWorkspaces;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -9,26 +10,9 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DashboardController extends AbstractController
 {
     #[Route('/dashboard', name: 'dashboard')]
-    public function index(): Response
+    public function index(GetUserWorkspaces $getUserWorkspaces): Response
     {
-        $workspaces = [
-            [
-                'name' => 'Administración',
-                'id' => 1,
-                'routes' => [
-                    ['label' => 'Overview', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => 1]],
-                    ['label' => 'Documentos', 'icon' => 'bi-file-earmark-text', 'path' => 'workspace_documents', 'params' => ['id' => 1]],
-                ]
-            ],
-            [
-                'name' => 'Development',
-                'id' => 2,
-                'routes' => [
-                    ['label' => 'Overview', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => 2]],
-                    ['label' => 'Tickets', 'icon' => 'bi-life-preserver', 'path' => 'workspace_tickets', 'params' => ['id' => 2]],
-                ]
-            ],
-        ];
+        $workspaces = $getUserWorkspaces($this->getUser());
 
         return $this->render('dashboard/index.html.twig', [
             'controller_name' => 'DashboardController',
