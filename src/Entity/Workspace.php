@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use App\Entity\User;
+use App\Entity\ValueObject\WorkspaceName;
 
 #[ORM\Entity]
 class Workspace
@@ -23,11 +25,33 @@ class Workspace
 
     protected function __construct() {}
 
-    public function initialize(string $name, User $owner): void
+    public function initialize(WorkspaceName $name, User $owner): void
     {
         $this->id = Uuid::v4();
         $this->createdAt = new \DateTimeImmutable();
-        $this->name = $name;
+        $this->name = (string) $name;
         $this->owner = $owner;
+    }
+
+    public function getId(): ?Uuid
+    {
+        return $this->id;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function renameTo(WorkspaceName $newName): void
+    {
+        $this->name = (string) $newName;
     }
 }

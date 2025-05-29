@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -32,5 +33,25 @@ class WorkspaceMembership
         $this->workspace = $workspace;
         $this->user = $user;
         $this->role = $role;
+    }
+
+    public function getWorkspace(): Workspace
+    {
+        return $this->workspace;
+    }
+
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+    public function getJoinedAt(): \DateTimeImmutable
+    {
+        return $this->joinedAt;
     }
 }

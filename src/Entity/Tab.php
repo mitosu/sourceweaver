@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\ValueObject\TabName;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
@@ -28,12 +29,17 @@ abstract class Tab
 
     protected function __construct() {}
 
-    public function initialize(string $name, Dashboard $dashboard, int $position): void
+    public function initialize(TabName $name, Dashboard $dashboard, int $position): void
     {
         $this->id = Uuid::v4();
         $this->createdAt = new \DateTimeImmutable();
-        $this->name = $name;
+        $this->name = (string) $name;
         $this->dashboard = $dashboard;
         $this->position = $position;
+    }
+
+    public function renameTo(TabName $newName): void
+    {
+        $this->name = (string) $newName;
     }
 }
