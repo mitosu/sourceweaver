@@ -4,11 +4,12 @@ namespace App\Factory;
 
 use App\Entity\Workspace;
 use App\Entity\User;
+use App\Entity\ValueObject\WorkspaceName;
 use ReflectionClass;
 
 class WorkspaceFactory
 {
-    public static function create(string $name, User $owner): Workspace
+    public static function create(WorkspaceName $name, User $owner): Workspace
     {
         $reflection = new ReflectionClass(Workspace::class);
         /** @var Workspace $workspace */

@@ -42,4 +42,17 @@ abstract class Tab
     {
         $this->name = (string) $newName;
     }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function getDashboard(): Dashboard
+    {
+        return $this->dashboard;
+    }
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
 }

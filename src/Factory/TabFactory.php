@@ -7,11 +7,12 @@ use App\Entity\MainTableTab;
 use App\Entity\KanbanTab;
 use App\Entity\CalendarTab;
 use App\Entity\Tab;
+use App\Entity\ValueObject\TabName;
 use ReflectionClass;
 
 class TabFactory
 {
-    public static function mainTable(string $name, Dashboard $dashboard, int $position): MainTableTab
+    public static function mainTable(TabName $name, Dashboard $dashboard, int $position): MainTableTab
     {
         $reflection = new ReflectionClass(MainTableTab::class);
         /** @var MainTableTab $tab */
@@ -20,7 +21,7 @@ class TabFactory
         return $tab;
     }
 
-    public static function kanban(string $name, Dashboard $dashboard, int $position): KanbanTab
+    public static function kanban(TabName $name, Dashboard $dashboard, int $position): KanbanTab
     {
         $reflection = new ReflectionClass(KanbanTab::class);
         /** @var KanbanTab $tab */
@@ -29,7 +30,7 @@ class TabFactory
         return $tab;
     }
 
-    public static function calendar(string $name, Dashboard $dashboard, int $position): CalendarTab
+    public static function calendar(TabName $name, Dashboard $dashboard, int $position): CalendarTab
     {
         $reflection = new ReflectionClass(CalendarTab::class);
         /** @var CalendarTab $tab */
