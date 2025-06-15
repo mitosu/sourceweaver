@@ -27,7 +27,7 @@ symfony:
 	docker-compose exec php php bin/console
 
 dbshell:
-	docker-compose exec db mysql -u symfony -psecret ironwhisper
+	docker-compose exec db mysql -u symfony -psecret sourceweaver
 
 rabbitmq:
 	open http://localhost:15672

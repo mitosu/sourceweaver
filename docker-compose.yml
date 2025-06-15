@@ -4,7 +4,7 @@ services:
   php:
     build:
       context: ./docker/php
-    container_name: ironwhisper_php
+    container_name: sourceweaver_php
     volumes:
       - .:/var/www/html
     working_dir: /var/www/html
@@ -18,7 +18,7 @@ services:
 
   web:
     image: nginx:alpine
-    container_name: ironwhisper_nginx
+    container_name: sourceweaver_nginx
     ports:
       - "8080:80"
     volumes:
@@ -31,23 +31,23 @@ services:
 
   db:
     image: mysql:8
-    container_name: ironwhisper_db
+    container_name: sourceweaver_db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ironwhisper
+      MYSQL_DATABASE: sourceweaver
       MYSQL_USER: symfony
       MYSQL_PASSWORD: secret
     ports:
       - "3306:3306"
     volumes:
-      - ironwhisper_db_data:/var/lib/mysql
+      - sourceweaver_db_data:/var/lib/mysql
     networks:
       - symfony
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: ironwhisper_rabbitmq
+    container_name: sourceweaver_rabbitmq
     ports:
       - "15672:15672"
       - "5672:5672"
@@ -55,7 +55,7 @@ services:
       - symfony
 
 volumes:
-  ironwhisper_db_data:
+  sourceweaver_db_data:
 
 networks:
   symfony:
