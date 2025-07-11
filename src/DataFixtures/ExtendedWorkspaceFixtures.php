@@ -7,10 +7,11 @@ use App\Factory\WorkspaceMembershipFactory;
 use App\Factory\DashboardFactory;
 use App\Factory\TabFactory;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface; // Import DependentFixtureInterface
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection; // Import Connection
 
-class ExtendedWorkspaceFixtures extends Fixture
+class ExtendedWorkspaceFixtures extends Fixture implements DependentFixtureInterface // Implement DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
@@ -76,5 +77,12 @@ class ExtendedWorkspaceFixtures extends Fixture
         }
 
         $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            AppFixtures::class,
+        ];
     }
 }
