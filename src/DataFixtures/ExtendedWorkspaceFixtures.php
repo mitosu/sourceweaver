@@ -8,20 +8,32 @@ use App\Factory\DashboardFactory;
 use App\Factory\TabFactory;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use App\Entity\ValueObject\WorkspaceName;
 
 class ExtendedWorkspaceFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        // Suponemos que ya existen al menos 2 usuarios
-        $users = $manager->getRepository(User::class)->findBy([], null, 2);
+        /** @var Connection $connection */
+        $connection = $manager->getConnection();
 
+        $queryBuilder = $connection->createQueryBuilder();
+        $queryBuilder
+            ->select('*')
+            ->from('user')
+            ->where('JSON_CONTAINS(roles, :role) = 1')
+            ->setParameter('role', '"ADMIN"')
+            ->setMaxResults(2);
+
+        $users = $queryBuilder->fetchAllAssociative();
+        
         if (count($users) < 2) {
             throw new \RuntimeException("Se requieren al menos 2 usuarios para ejecutar esta fixture.");
         }
 
         foreach ($users as $index => $user) {
-            $workspace = WorkspaceFactory::create("Workspace del usuario {$user->getEmail()}", $user);
+            $workspaceName = new WorkspaceName('Logitec');
+            $workspace = WorkspaceFactory::create($workspaceName, $user);
             $manager->persist($workspace);
 
             $membership = WorkspaceMembershipFactory::create($workspace, $user, 'ADMIN');

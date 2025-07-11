@@ -14,7 +14,7 @@ class WorkspaceFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $user = $manager->getRepository(User::class)->findOneBy([]);
+        $user = $manager->getRepository(User::class)->findOneBy(['email' => 'miguel@mail.com']);
 
         if (!$user) {
             throw new \RuntimeException("Se requiere al menos un usuario para asignar el Workspace");
