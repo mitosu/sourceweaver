@@ -1,0 +1,173 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nueva Configuración de API - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Nueva Configuración de API</h1>
+                <p class="text-muted mb-0">Workspace: <strong>{{ workspace.name }}</strong></p>
+            </div>
+            <a href="{{ path('api_configuration_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.name) }}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4 pt-2">
+                                    {{ form_widget(form.isActive) }}
+                                    {{ form_label(form.isActive) }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {{ form_row(form.description) }}
+                        
+                        <hr class="my-4">
+                        
+                        <h5>Opciones de configuración</h5>
+                        <p class="text-muted small">
+                            Define los parámetros necesarios para conectar con la API (API Keys, URLs, timeouts, etc.)
+                        </p>
+                        
+                        <div id="api-options" data-prototype="{{ form_widget(form.options.vars.prototype)|e('html_attr') }}">
+                            {% for option in form.options %}
+                                <div class="api-option mb-3 p-3 border rounded">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            {{ form_row(option.optionName) }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ form_row(option.optionValue) }}
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-center">
+                                            <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeOption(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                {{ form_widget(option.isEncrypted) }}
+                                                {{ form_label(option.isEncrypted) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-success" onclick="addOption()">
+                                <i class="bi bi-plus me-1"></i>Añadir Opción
+                            </button>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ path('api_configuration_index') }}" class="btn btn-secondary">Cancelar</a>
+                            {{ form_widget(form.save) }}
+                        </div>
+                        
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Información
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <h6>Configuración Manual vs Template</h6>
+                        <p class="small text-muted">
+                            Puedes configurar una API manualmente añadiendo opciones una por una, 
+                            o usar un template JSON predefinido.
+                        </p>
+                        
+                        <h6>Opciones Comunes</h6>
+                        <ul class="small text-muted">
+                            <li><strong>API_KEY:</strong> Clave de autenticación</li>
+                            <li><strong>BASE_URL:</strong> URL base de la API</li>
+                            <li><strong>TIMEOUT:</strong> Tiempo límite de conexión</li>
+                            <li><strong>RATE_LIMIT:</strong> Límite de peticiones</li>
+                        </ul>
+                        
+                        <h6>Encriptación</h6>
+                        <p class="small text-muted">
+                            Marca "Encriptar valor" para API Keys y datos sensibles. 
+                            Estos valores se almacenarán de forma segura.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+let optionIndex = {{ form.options|length }};
+
+function addOption() {
+    const container = document.getElementById('api-options');
+    const prototype = container.dataset.prototype;
+    const newOption = prototype.replace(/__option_name__/g, optionIndex);
+    
+    const div = document.createElement('div');
+    div.className = 'api-option mb-3 p-3 border rounded';
+    div.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                ${newOption.match(/<div[^>]*>(.*?)<\/div>/s)[1].replace(/option_name/, 'optionName').replace(/for="[^"]*"/, 'for="api_configuration_options_' + optionIndex + '_optionName"').replace(/id="[^"]*"/, 'id="api_configuration_options_' + optionIndex + '_optionName"').replace(/name="[^"]*"/, 'name="api_configuration[options][' + optionIndex + '][optionName]"')}
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="api_configuration_options_${optionIndex}_optionValue" class="form-label required">Valor</label>
+                    <input type="text" class="form-control" id="api_configuration_options_${optionIndex}_optionValue" name="api_configuration[options][${optionIndex}][optionValue]" placeholder="Valor de la opción" required="required">
+                </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-center">
+                <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeOption(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="api_configuration_options_${optionIndex}_isEncrypted" name="api_configuration[options][${optionIndex}][isEncrypted]" value="1">
+                    <label for="api_configuration_options_${optionIndex}_isEncrypted" class="form-check-label">Encriptar valor (para API keys sensibles)</label>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(div);
+    optionIndex++;
+}
+
+function removeOption(button) {
+    button.closest('.api-option').remove();
+}
+</script>
+{% endblock %}

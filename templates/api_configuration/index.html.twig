@@ -1,0 +1,220 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuración de APIs - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Configuración de APIs OSINT</h1>
+            <div class="d-flex gap-2">
+                <a href="{{ path('api_configuration_download_template') }}" 
+                   class="btn btn-outline-secondary" download>
+                    <i class="bi bi-download me-1"></i>Descargar Template
+                </a>
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#uploadTemplateModal">
+                    <i class="bi bi-upload me-1"></i>Subir Template
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-plus me-1"></i>Nueva API
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for workspace in workspaces %}
+                            <li>
+                                <a class="dropdown-item" href="{{ path('api_configuration_new', {workspaceId: workspace.id}) }}">
+                                    {{ workspace.name }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if configurations is empty %}
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>No hay configuraciones de APIs
+                </h5>
+                <p class="mb-3">
+                    Aún no has configurado ninguna API para OSINT. Para empezar:
+                </p>
+                <ul class="mb-3">
+                    <li>Descarga un template de ejemplo para conocer la estructura</li>
+                    <li>Configura manualmente una nueva API seleccionando el workspace</li>
+                    <li>O sube un archivo de configuración JSON existente</li>
+                </ul>
+                <hr>
+                <p class="mb-0">
+                    Las APIs configuradas te permitirán realizar análisis de ciberinteligencia 
+                    como los que proporciona SpiderFoot.
+                </p>
+            </div>
+        {% else %}
+            {% for workspaceName, workspaceConfigs in configurations %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-folder2-open me-2"></i>{{ workspaceName }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>API</th>
+                                        <th>Descripción</th>
+                                        <th>Opciones</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for config in workspaceConfigs %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ config.name }}</strong>
+                                            </td>
+                                            <td>
+                                                {{ config.description|slice(0, 100) }}{% if config.description|length > 100 %}...{% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">
+                                                    {{ config.options|length }} opciones
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if config.isActive %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {% if config.isActive %}Activa{% else %}Inactiva{% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ config.createdAt|date('d/m/Y H:i') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ path('api_configuration_edit', {id: config.id}) }}" 
+                                                       class="btn btn-outline-primary">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-{% if config.isActive %}warning{% else %}success{% endif %}"
+                                                            onclick="toggleApiConfiguration('{{ config.id }}', this)">
+                                                        <i class="bi bi-{% if config.isActive %}pause{% else %}play{% endif %}"></i>
+                                                    </button>
+                                                    <form method="post" 
+                                                          action="{{ path('api_configuration_delete', {id: config.id}) }}" 
+                                                          class="d-inline"
+                                                          onsubmit="return confirm('¿Estás seguro de eliminar esta configuración?')">
+                                                        <button type="submit" class="btn btn-outline-danger">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para subir template -->
+<div class="modal fade" id="uploadTemplateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Subir Template de Configuración</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadTemplateForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="workspace_id" class="form-label">Workspace</label>
+                        <select class="form-select" id="workspace_id" name="workspace_id" required>
+                            <option value="">Selecciona un workspace</option>
+                            {% for workspace in workspaces %}
+                                <option value="{{ workspace.id }}">{{ workspace.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="template" class="form-label">Archivo JSON</label>
+                        <input type="file" class="form-control" id="template" name="template" 
+                               accept=".json" required>
+                        <div class="form-text">
+                            Sube un archivo JSON con la configuración de la API. 
+                            <a href="{{ path('api_configuration_download_template') }}" download>
+                                Descarga un template de ejemplo
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="uploadTemplate()">
+                    <i class="bi bi-upload me-1"></i>Subir Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+function toggleApiConfiguration(configId, button) {
+    fetch(`/api-configuration/${configId}/toggle`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error al cambiar el estado de la configuración');
+        }
+    })
+    .catch(error => {
+        alert('Error al cambiar el estado de la configuración');
+    });
+}
+
+function uploadTemplate() {
+    const form = document.getElementById('uploadTemplateForm');
+    const formData = new FormData(form);
+    
+    fetch('{{ path('api_configuration_upload_template') }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.error || 'Error al subir el template');
+        }
+    })
+    .catch(error => {
+        alert('Error al subir el template');
+    });
+}
+</script>
+{% endblock %}
