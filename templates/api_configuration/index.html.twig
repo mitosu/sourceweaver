@@ -15,20 +15,9 @@
                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#uploadTemplateModal">
                     <i class="bi bi-upload me-1"></i>Subir Template
                 </button>
-                <div class="dropdown">
-                    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-plus me-1"></i>Nueva API
-                    </button>
-                    <ul class="dropdown-menu">
-                        {% for workspace in workspaces %}
-                            <li>
-                                <a class="dropdown-item" href="{{ path('api_configuration_new', {workspaceId: workspace.id}) }}">
-                                    {{ workspace.name }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newApiModal">
+                    <i class="bi bi-plus me-1"></i>Nueva API
+                </button>
             </div>
         </div>
 
@@ -42,90 +31,160 @@
                 </p>
                 <ul class="mb-3">
                     <li>Descarga un template de ejemplo para conocer la estructura</li>
-                    <li>Configura manualmente una nueva API seleccionando el workspace</li>
+                    <li>Configura manualmente una nueva API usando el botón "Nueva API"</li>
                     <li>O sube un archivo de configuración JSON existente</li>
                 </ul>
                 <hr>
                 <p class="mb-0">
-                    Las APIs configuradas te permitirán realizar análisis de ciberinteligencia 
-                    como los que proporciona SpiderFoot.
+                    Las APIs configuradas estarán disponibles globalmente para todos los workspaces 
+                    y te permitirán realizar análisis de ciberinteligencia como los que proporciona SpiderFoot.
                 </p>
             </div>
         {% else %}
-            {% for workspaceName, workspaceConfigs in configurations %}
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-folder2-open me-2"></i>{{ workspaceName }}
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-gear me-2"></i>APIs Configuradas ({{ configurations|length }})
+                    </h5>
+                    <small class="text-muted">Disponibles globalmente para todos los workspaces</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>API</th>
+                                    <th>Descripción</th>
+                                    <th>Opciones</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for config in configurations %}
                                     <tr>
-                                        <th>API</th>
-                                        <th>Descripción</th>
-                                        <th>Opciones</th>
-                                        <th>Estado</th>
-                                        <th>Fecha</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for config in workspaceConfigs %}
-                                        <tr>
-                                            <td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
                                                 <strong>{{ config.name }}</strong>
-                                            </td>
-                                            <td>
-                                                {{ config.description|slice(0, 100) }}{% if config.description|length > 100 %}...{% endif %}
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-secondary">
-                                                    {{ config.options|length }} opciones
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge {% if config.isActive %}bg-success{% else %}bg-danger{% endif %}">
-                                                    {% if config.isActive %}Activa{% else %}Inactiva{% endif %}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    {{ config.createdAt|date('d/m/Y H:i') }}
-                                                </small>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm">
-                                                    <a href="{{ path('api_configuration_edit', {id: config.id}) }}" 
-                                                       class="btn btn-outline-primary">
-                                                        <i class="bi bi-pencil"></i>
+                                                {% if config.documentationUrl %}
+                                                    <a href="{{ config.documentationUrl }}" target="_blank" class="ms-2" title="Ver documentación">
+                                                        <i class="bi bi-box-arrow-up-right"></i>
                                                     </a>
-                                                    <button type="button" 
-                                                            class="btn btn-outline-{% if config.isActive %}warning{% else %}success{% endif %}"
-                                                            onclick="toggleApiConfiguration('{{ config.id }}', this)">
-                                                        <i class="bi bi-{% if config.isActive %}pause{% else %}play{% endif %}"></i>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if config.description %}
+                                                {{ config.description|slice(0, 80) }}{% if config.description|length > 80 %}...{% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Sin descripción</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                {{ config.options|length }} opciones
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if config.isActive %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if config.isActive %}Activa{% else %}Inactiva{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ config.createdAt|date('d/m/Y H:i') }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ path('api_configuration_edit', {id: config.id}) }}" 
+                                                   class="btn btn-outline-primary" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-outline-{% if config.isActive %}warning{% else %}success{% endif %}"
+                                                        onclick="toggleApiConfiguration('{{ config.id }}', this)"
+                                                        title="{% if config.isActive %}Desactivar{% else %}Activar{% endif %}">
+                                                    <i class="bi bi-{% if config.isActive %}pause{% else %}play{% endif %}"></i>
+                                                </button>
+                                                <form method="post" 
+                                                      action="{{ path('api_configuration_delete', {id: config.id}) }}" 
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('¿Estás seguro de eliminar esta configuración?')">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
+                                                        <i class="bi bi-trash"></i>
                                                     </button>
-                                                    <form method="post" 
-                                                          action="{{ path('api_configuration_delete', {id: config.id}) }}" 
-                                                          class="d-inline"
-                                                          onsubmit="return confirm('¿Estás seguro de eliminar esta configuración?')">
-                                                        <button type="submit" class="btn btn-outline-danger">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            {% endfor %}
+            </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Modal para nueva API -->
+<div class="modal fade" id="newApiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva API de OSINT</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newApiForm">
+                    <div class="mb-3">
+                        <label for="api_name" class="form-label">Nombre de la API *</label>
+                        <input type="text" class="form-control" id="api_name" name="api_name" 
+                               placeholder="Ej: AbuseIPDB, VirusTotal, Shodan" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="api_description" name="api_description" 
+                                  rows="2" placeholder="Descripción de la API y su propósito"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_documentation_url" class="form-label">URL de Documentación</label>
+                        <input type="url" class="form-control" id="api_documentation_url" name="api_documentation_url" 
+                               placeholder="https://docs.api.com">
+                        <div class="form-text">URL opcional a la documentación de la API</div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Configuración de la API</h6>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addApiOption()">
+                            <i class="bi bi-plus me-1"></i>Añadir Opción
+                        </button>
+                    </div>
+                    
+                    <div id="api-options-container">
+                        <!-- Las opciones dinámicas se añadirán aquí -->
+                        <div class="alert alert-info alert-sm">
+                            <small>
+                                <i class="bi bi-info-circle me-1"></i>
+                                Añade las opciones de configuración necesarias para tu API (API Keys, URLs base, timeouts, etc.)
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="createNewApi()">
+                    <i class="bi bi-plus me-1"></i>Crear API
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -139,15 +198,6 @@
             </div>
             <div class="modal-body">
                 <form id="uploadTemplateForm" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="workspace_id" class="form-label">Workspace</label>
-                        <select class="form-select" id="workspace_id" name="workspace_id" required>
-                            <option value="">Selecciona un workspace</option>
-                            {% for workspace in workspaces %}
-                                <option value="{{ workspace.id }}">{{ workspace.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
                     <div class="mb-3">
                         <label for="template" class="form-label">Archivo JSON</label>
                         <input type="file" class="form-control" id="template" name="template" 
@@ -175,6 +225,8 @@
 {% block javascripts %}
 {{ parent() }}
 <script>
+let optionCounter = 0;
+
 function toggleApiConfiguration(configId, button) {
     fetch(`/api-configuration/${configId}/toggle`, {
         method: 'POST',
@@ -192,6 +244,141 @@ function toggleApiConfiguration(configId, button) {
     })
     .catch(error => {
         alert('Error al cambiar el estado de la configuración');
+    });
+}
+
+function addApiOption() {
+    const container = document.getElementById('api-options-container');
+    
+    // Remove the info alert if it exists
+    const infoAlert = container.querySelector('.alert-info');
+    if (infoAlert) {
+        infoAlert.remove();
+    }
+    
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'api-option-row mb-3 p-3 border rounded';
+    optionDiv.innerHTML = `
+        <div class="row">
+            <div class="col-md-5">
+                <label for="option_${optionCounter}" class="form-label">Opción (Label) *</label>
+                <input type="text" class="form-control option-input" id="option_${optionCounter}" name="options[${optionCounter}][name]" 
+                       placeholder="Ej: API_KEY, BASE_URL, TIMEOUT" required
+                       onchange="updateOptionLabel(this, ${optionCounter})">
+                <small class="form-text text-muted">Este será el label del campo</small>
+            </div>
+            <div class="col-md-5">
+                <label for="value_${optionCounter}" class="form-label">Valor</label>
+                <input type="text" class="form-control" id="value_${optionCounter}" name="options[${optionCounter}][value]" 
+                       placeholder="Valor de la opción">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger btn-sm w-100 mb-3" onclick="removeApiOption(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="encrypted_${optionCounter}" name="options[${optionCounter}][encrypted]" value="1">
+                    <label class="form-check-label" for="encrypted_${optionCounter}">
+                        <i class="bi bi-shield-lock me-1"></i>Encriptar valor (para datos sensibles)
+                    </label>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(optionDiv);
+    optionCounter++;
+}
+
+function removeApiOption(button) {
+    const optionRow = button.closest('.api-option-row');
+    optionRow.remove();
+    
+    // If no more options, show the info alert again
+    const container = document.getElementById('api-options-container');
+    if (container.children.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info alert-sm">
+                <small>
+                    <i class="bi bi-info-circle me-1"></i>
+                    Añade las opciones de configuración necesarias para tu API (API Keys, URLs base, timeouts, etc.)
+                </small>
+            </div>
+        `;
+    }
+}
+
+function updateOptionLabel(input, counter) {
+    const valueLabel = document.querySelector(`label[for="value_${counter}"]`);
+    if (valueLabel && input.value.trim()) {
+        valueLabel.textContent = input.value.trim();
+    } else {
+        valueLabel.textContent = 'Valor';
+    }
+}
+
+function createNewApi() {
+    const form = document.getElementById('newApiForm');
+    const formData = new FormData(form);
+    
+    // Validar campos requeridos
+    const name = formData.get('api_name');
+    
+    if (!name) {
+        alert('Por favor completa el nombre de la API');
+        return;
+    }
+    
+    // Recopilar las opciones dinámicas
+    const options = [];
+    const optionRows = document.querySelectorAll('.api-option-row');
+    
+    optionRows.forEach((row, index) => {
+        const nameInput = row.querySelector(`input[name="options[${index}][name]"]`);
+        const valueInput = row.querySelector(`input[name="options[${index}][value]"]`);
+        const encryptedInput = row.querySelector(`input[name="options[${index}][encrypted]"]`);
+        
+        if (nameInput && nameInput.value.trim()) {
+            options.push({
+                option_name: nameInput.value.trim(),
+                option_value: valueInput ? valueInput.value : '',
+                is_encrypted: encryptedInput ? encryptedInput.checked : false
+            });
+        }
+    });
+    
+    // Crear el objeto JSON para enviar
+    const apiData = {
+        name: name,
+        description: formData.get('api_description') || '',
+        documentation_url: formData.get('api_documentation_url') || '',
+        options: options
+    };
+    
+    // Enviar al servidor
+    fetch('{{ path('api_configuration_create_from_modal') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('API creada exitosamente');
+            location.reload();
+        } else {
+            alert(data.error || 'Error al crear la API');
+        }
+    })
+    .catch(error => {
+        alert('Error al crear la API');
+        console.error('Error:', error);
     });
 }
 
@@ -216,5 +403,24 @@ function uploadTemplate() {
         alert('Error al subir el template');
     });
 }
+
+// Inicializar con una opción por defecto cuando se abre el modal
+document.getElementById('newApiModal').addEventListener('shown.bs.modal', function () {
+    // Reset form
+    document.getElementById('newApiForm').reset();
+    const container = document.getElementById('api-options-container');
+    container.innerHTML = `
+        <div class="alert alert-info alert-sm">
+            <small>
+                <i class="bi bi-info-circle me-1"></i>
+                Añade las opciones de configuración necesarias para tu API (API Keys, URLs base, timeouts, etc.)
+            </small>
+        </div>
+    `;
+    optionCounter = 0;
+    
+    // Add one default option
+    addApiOption();
+});
 </script>
 {% endblock %}

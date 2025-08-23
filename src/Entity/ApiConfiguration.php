@@ -22,6 +22,9 @@ class ApiConfiguration
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $documentationUrl = null;
+
     #[ORM\Column(type: 'boolean')]
     private bool $isActive = true;
 
@@ -37,10 +40,6 @@ class ApiConfiguration
 
     #[ORM\OneToMany(mappedBy: 'apiConfiguration', targetEntity: ApiConfigurationOption::class, cascade: ['persist', 'remove'])]
     private Collection $options;
-
-    #[ORM\ManyToOne(targetEntity: Workspace::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Workspace $workspace = null;
 
     public function __construct()
     {
@@ -88,6 +87,17 @@ class ApiConfiguration
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+        return $this;
+    }
+
+    public function getDocumentationUrl(): ?string
+    {
+        return $this->documentationUrl;
+    }
+
+    public function setDocumentationUrl(?string $documentationUrl): static
+    {
+        $this->documentationUrl = $documentationUrl;
         return $this;
     }
 
@@ -147,14 +157,4 @@ class ApiConfiguration
         return $this;
     }
 
-    public function getWorkspace(): ?Workspace
-    {
-        return $this->workspace;
-    }
-
-    public function setWorkspace(?Workspace $workspace): static
-    {
-        $this->workspace = $workspace;
-        return $this;
-    }
 }
