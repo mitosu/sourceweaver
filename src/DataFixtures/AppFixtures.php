@@ -21,7 +21,8 @@ class AppFixtures extends Fixture
         $adminUsersData = [
             ['email' => 'admin1@example.com', 'password' => 'adminpass1'],
             ['email' => 'admin2@example.com', 'password' => 'adminpass2'],
-            ['email' => 'user1@example.com', 'password' => 'userpass1'], // Non-admin user
+            ['email' => 'user1@example.com', 'password' => 'userpass1'],
+            ['email' => 'miguel@mail.com', 'password' => 'miguelpass1'],
         ];
 
         foreach ($adminUsersData as $userData) {

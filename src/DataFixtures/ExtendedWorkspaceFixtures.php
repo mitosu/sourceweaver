@@ -6,6 +6,8 @@ use App\Factory\WorkspaceFactory;
 use App\Factory\WorkspaceMembershipFactory;
 use App\Factory\DashboardFactory;
 use App\Factory\TabFactory;
+use App\Entity\ValueObject\DashboardName;
+use App\Entity\ValueObject\TabName;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface; // Import DependentFixtureInterface
 use Doctrine\Persistence\ObjectManager;
@@ -31,17 +33,10 @@ class ExtendedWorkspaceFixtures extends Fixture implements DependentFixtureInter
         $userIds = $statement->fetchFirstColumn();
 
         if (count($userIds) < 2) {
-            // Try to fetch at least one admin if two are not available.
-            // Or, if the requirement is strictly two admins, this exception is appropriate.
-            // For now, let's adjust the message slightly if any admins are found but less than 2.
             if (empty($userIds)) {
                  throw new \RuntimeException("No se encontraron usuarios con el rol 'ADMIN' para ejecutar esta fixture.");
             }
-            // If we want to proceed with fewer than 2 admins, we can, otherwise the original check is fine.
-            // For this example, let's stick to the requirement of 2, or throw.
-            // To be more flexible, one might fetch up to 2 and proceed if at least 1 is found.
-            // However, the original logic implies a need for a certain number (2).
-            // Let's ensure the message is accurate for the strict check.
+            
              throw new \RuntimeException("Se requieren al menos 2 usuarios con rol 'ADMIN' para ejecutar esta fixture. Encontrados: " . count($userIds));
         }
 
@@ -63,15 +58,15 @@ class ExtendedWorkspaceFixtures extends Fixture implements DependentFixtureInter
             $manager->persist($membership);
 
             foreach (range(1, 2) as $d) {
-                $dashboard = DashboardFactory::create("Dashboard {$d} para {$user->getEmail()}", $workspace);
+                $dashboard = DashboardFactory::create(new DashboardName("Dashboard {$d} para {$user->getId()}"), $workspace);
                 $manager->persist($dashboard);
 
                 foreach (range(1, 3) as $i) {
                     $type = ['mainTable', 'kanban', 'calendar'][($i - 1) % 3];
                     $tab = match ($type) {
-                        'mainTable' => TabFactory::mainTable("Main Table {$i}", $dashboard, $i),
-                        'kanban' => TabFactory::kanban("Kanban {$i}", $dashboard, $i),
-                        'calendar' => TabFactory::calendar("Calendar {$i}", $dashboard, $i),
+                        'mainTable' => TabFactory::mainTable(new TabName("Main Table {$i}"), $dashboard, $i),
+                        'kanban' => TabFactory::kanban(new TabName("Kanban {$i}"), $dashboard, $i),
+                        'calendar' => TabFactory::calendar(new TabName("Calendar {$i}"), $dashboard, $i),
                     };
                     $manager->persist($tab);
                 }

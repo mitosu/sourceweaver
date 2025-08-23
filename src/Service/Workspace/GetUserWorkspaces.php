@@ -24,8 +24,11 @@ class GetUserWorkspaces
                 'name' => $workspace->getName(),
                 'id' => $id,
                 'routes' => [
-                    ['label' => 'Overview', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => $id]],
-                    ['label' => 'Documentos', 'icon' => 'bi-file-earmark-text', 'path' => 'workspace_documents', 'params' => ['id' => $id]],
+                    ['label' => 'Identificadores Personales', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => $id]],
+                    ['label' => 'Datos Técnicos', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => $id]],
+                    ['label' => 'Metadatos', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => $id]],
+                    ['label' => 'Redes Sociales', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => $id]],
+                    ['label' => 'Redes Sociales', 'icon' => 'bi-grid', 'path' => 'workspace_overview', 'params' => ['id' => $id]],
                 ]
             ];
         }
