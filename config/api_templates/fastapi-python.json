@@ -1,0 +1,73 @@
+{
+    "name": "FastAPI-Python",
+    "description": "Python microservice for OSINT analysis using custom Python scripts. Integrates multiple OSINT tools and APIs.",
+    "documentation_url": "http://python-osint:8001/docs",
+    "options": [
+        {
+            "name": "fast_api_url",
+            "label": "FastAPI Service URL",
+            "type": "text",
+            "required": true,
+            "value": "http://python-osint:8001",
+            "description": "URL of the Python FastAPI microservice"
+        },
+        {
+            "name": "virustotal_api_key",
+            "label": "VirusTotal API Key",
+            "type": "password",
+            "required": false,
+            "description": "VirusTotal API key for the Python scripts"
+        },
+        {
+            "name": "abuseipdb_api_key",
+            "label": "AbuseIPDB API Key",
+            "type": "password",
+            "required": false,
+            "description": "AbuseIPDB API key for IP reputation checks"
+        },
+        {
+            "name": "urlvoid_api_key",
+            "label": "URLVoid API Key",
+            "type": "password",
+            "required": false,
+            "description": "URLVoid API key for URL/domain analysis"
+        },
+        {
+            "name": "urlvoid_identifier",
+            "label": "URLVoid Identifier",
+            "type": "text",
+            "required": false,
+            "description": "URLVoid API identifier"
+        },
+        {
+            "name": "shodan_api_key",
+            "label": "Shodan API Key",
+            "type": "password",
+            "required": false,
+            "description": "Shodan API key for advanced network analysis"
+        },
+        {
+            "name": "timeout",
+            "label": "Analysis Timeout (seconds)",
+            "type": "number",
+            "required": false,
+            "value": "120",
+            "description": "Maximum time to wait for analysis completion"
+        }
+    ],
+    "supported_targets": ["ip", "domain", "url", "email", "hash"],
+    "features": [
+        "Custom Python scripts for each target type",
+        "Multiple OSINT API integration",
+        "Threat scoring and analysis",
+        "Asynchronous processing",
+        "Comprehensive logging",
+        "Health monitoring"
+    ],
+    "endpoints": {
+        "health": "/health",
+        "analyze": "/analyze",
+        "scripts": "/scripts",
+        "docs": "/docs"
+    }
+}

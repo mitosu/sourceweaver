@@ -1,0 +1,210 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Importación Masiva - {{ investigation.name }} - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Importación Masiva de Targets</h1>
+                <p class="text-muted mb-0">Investigación: {{ investigation.name }}</p>
+            </div>
+            <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Volver a la investigación
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                        
+                        {{ form_row(form.targets) }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.autoAnalyze) }}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-secondary">Cancelar</a>
+                            {{ form_widget(form.import) }}
+                        </div>
+                        
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+
+                {% if importResults %}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-list-check me-1"></i>Resultados de la Importación
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h4 class="text-success">{{ importResults.imported|length }}</h4>
+                                        <small class="text-muted">Importados</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h4 class="text-warning">{{ importResults.skipped|length }}</h4>
+                                        <small class="text-muted">Omitidos</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h4 class="text-danger">{{ importResults.errors|length }}</h4>
+                                        <small class="text-muted">Errores</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if importResults.imported|length > 0 %}
+                                <div class="mb-4">
+                                    <h6 class="text-success">✅ Targets Importados ({{ importResults.imported|length }})</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Línea</th>
+                                                    <th>Tipo</th>
+                                                    <th>Valor</th>
+                                                    <th>Estado del Análisis</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for import in importResults.imported %}
+                                                    <tr>
+                                                        <td>{{ import.line }}</td>
+                                                        <td><span class="badge bg-primary">{{ import.type|upper }}</span></td>
+                                                        <td><code>{{ import.value }}</code></td>
+                                                        <td>
+                                                            {% if import.analyzed is defined %}
+                                                                {% if import.analyzed %}
+                                                                    <span class="badge bg-success">Analizado</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-danger">Error: {{ import.analysis_error ?? 'Error desconocido' }}</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Sin analizar</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if importResults.skipped|length > 0 %}
+                                <div class="mb-4">
+                                    <h6 class="text-warning">⚠️ Targets Omitidos ({{ importResults.skipped|length }})</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Línea</th>
+                                                    <th>Valor</th>
+                                                    <th>Motivo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for skip in importResults.skipped %}
+                                                    <tr>
+                                                        <td>{{ skip.line }}</td>
+                                                        <td><code>{{ skip.value }}</code></td>
+                                                        <td>{{ skip.reason }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if importResults.errors|length > 0 %}
+                                <div class="mb-4">
+                                    <h6 class="text-danger">❌ Errores ({{ importResults.errors|length }})</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Línea</th>
+                                                    <th>Valor</th>
+                                                    <th>Error</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for error in importResults.errors %}
+                                                    <tr>
+                                                        <td>{{ error.line }}</td>
+                                                        <td><code>{{ error.value }}</code></td>
+                                                        <td class="text-danger">{{ error.error }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Formatos Soportados
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for type, format in supportedFormats %}
+                            <div class="mb-3">
+                                <h6>{{ format.name }}</h6>
+                                <p class="small text-muted mb-2">{{ format.description }}</p>
+                                <div class="small">
+                                    <strong>Ejemplos:</strong><br>
+                                    {% for example in format.examples %}
+                                        <code class="d-block">{{ example }}</code>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-lightbulb me-1"></i>Consejos
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small mb-0">
+                            <li>Un target por línea</li>
+                            <li>Las líneas vacías se ignoran</li>
+                            <li>El tipo se detecta automáticamente</li>
+                            <li>Los targets duplicados se omiten</li>
+                            <li>Si está marcado "Analizar automáticamente", se ejecutará el análisis tras la importación</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

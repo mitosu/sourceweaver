@@ -1,0 +1,42 @@
+{
+    "name": "URLVoid",
+    "description": "Website scanner that checks URLs and domains against multiple blacklist engines",
+    "documentation_url": "https://www.urlvoid.com/api/",
+    "options": [
+        {
+            "name": "api_key",
+            "label": "API Key",
+            "type": "password",
+            "required": true,
+            "description": "Your URLVoid API key (get it from https://www.urlvoid.com/api/)"
+        },
+        {
+            "name": "identifier",
+            "label": "API Identifier",
+            "type": "text",
+            "required": true,
+            "description": "Your URLVoid API identifier (provided with your API key)"
+        },
+        {
+            "name": "base_url",
+            "label": "Base URL",
+            "type": "text",
+            "required": true,
+            "value": "http://api.urlvoid.com",
+            "description": "URLVoid API base URL"
+        },
+        {
+            "name": "rate_limit",
+            "label": "Rate Limit (requests per day)",
+            "type": "number",
+            "required": false,
+            "value": "100",
+            "description": "API rate limit for free accounts (100 requests/day)"
+        }
+    ],
+    "supported_targets": ["url", "domain", "ip"],
+    "endpoints": {
+        "domain": "/api1000/{identifier}/host/{domain}",
+        "ip": "/api1000/{identifier}/ip/{ip}"
+    }
+}

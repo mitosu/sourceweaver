@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nuevo Target - {{ investigation.name }} - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Nuevo Target</h1>
+                <p class="text-muted mb-0">Investigación: {{ investigation.name }}</p>
+            </div>
+            <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Volver a la investigación
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form_row(form.type) }}
+                            </div>
+                            <div class="col-md-8">
+                                {{ form_row(form.value) }}
+                            </div>
+                        </div>
+                        
+                        {{ form_row(form.description) }}
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-secondary">Cancelar</a>
+                            {{ form_widget(form.save) }}
+                        </div>
+                        
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Tipos de Target
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <h6><i class="bi bi-hdd-network me-1"></i>Dirección IP</h6>
+                        <p class="small text-muted">Ej: 192.168.1.1, 8.8.8.8</p>
+                        
+                        <h6><i class="bi bi-globe me-1"></i>Dominio</h6>
+                        <p class="small text-muted">Ej: example.com, google.com</p>
+                        
+                        <h6><i class="bi bi-link-45deg me-1"></i>URL</h6>
+                        <p class="small text-muted">Ej: https://example.com/path</p>
+                        
+                        <h6><i class="bi bi-envelope me-1"></i>Email</h6>
+                        <p class="small text-muted">Ej: user@domain.com</p>
+                        
+                        <h6><i class="bi bi-fingerprint me-1"></i>Hash</h6>
+                        <p class="small text-muted">MD5, SHA1, SHA256</p>
+                        
+                        <h6><i class="bi bi-telephone me-1"></i>Teléfono</h6>
+                        <p class="small text-muted">Números de teléfono</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.querySelector('select[name="target[type]"]');
+    const valueInput = document.querySelector('input[name="target[value]"]');
+    
+    typeSelect.addEventListener('change', function() {
+        switch(this.value) {
+            case 'ip':
+                valueInput.placeholder = 'Ej: 192.168.1.1, 8.8.8.8';
+                break;
+            case 'domain':
+                valueInput.placeholder = 'Ej: example.com, google.com';
+                break;
+            case 'url':
+                valueInput.placeholder = 'Ej: https://example.com/path';
+                break;
+            case 'email':
+                valueInput.placeholder = 'Ej: user@domain.com';
+                break;
+            case 'hash':
+                valueInput.placeholder = 'MD5, SHA1 o SHA256';
+                break;
+            case 'phone':
+                valueInput.placeholder = 'Ej: +34600123456';
+                break;
+            default:
+                valueInput.placeholder = 'Valor del target';
+        }
+    });
+});
+</script>
+{% endblock %}

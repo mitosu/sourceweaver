@@ -19,10 +19,10 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $adminUsersData = [
-            ['email' => 'admin1@example.com', 'password' => 'adminpass1'],
-            ['email' => 'admin2@example.com', 'password' => 'adminpass2'],
-            ['email' => 'user1@example.com', 'password' => 'userpass1'],
-            ['email' => 'miguel@mail.com', 'password' => 'miguelpass1'],
+            ['email' => 'admin1@example.com', 'password' => 'adminpass1', 'ref' => 'admin-user'],
+            ['email' => 'admin2@example.com', 'password' => 'adminpass2', 'ref' => 'admin-user2'],
+            ['email' => 'user1@example.com', 'password' => 'userpass1', 'ref' => 'regular-user'],
+            ['email' => 'miguel@mail.com', 'password' => 'miguelpass1', 'ref' => 'miguel-user'],
         ];
 
         foreach ($adminUsersData as $userData) {
@@ -41,6 +41,9 @@ class AppFixtures extends Fixture
             }
 
             $manager->persist($user);
+            
+            // Set reference for other fixtures
+            $this->setReference($userData['ref'], $user);
         }
 
         $manager->flush();

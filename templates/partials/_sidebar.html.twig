@@ -4,15 +4,21 @@
             <h5 class="text-white mb-4 sidebar-title" style="margin-top: 15px;">Sourceweaver</h5>
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ path('dashboard') }}">
+                    <a class="nav-link {{ app.request.get('_route') == 'dashboard' ? 'active' : '' }}" href="{{ path('dashboard') }}">
                         <i class="bi bi-house-door me-2"></i>
-                        <span class="sidebar-label">Home</span>
+                        <span class="sidebar-label">Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="bi bi-briefcase me-2"></i>
-                        <span class="sidebar-label">My Work</span>
+                    <a class="nav-link {{ app.request.get('_route') starts with 'investigation' ? 'active' : '' }}" href="{{ path('investigation_index') }}">
+                        <i class="bi bi-search me-2"></i>
+                        <span class="sidebar-label">Investigaciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.get('_route') starts with 'api_configuration' ? 'active' : '' }}" href="{{ path('api_configuration_index') }}">
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        <span class="sidebar-label">APIs OSINT</span>
                     </a>
                 </li>
                 <li class="nav-item has-treeview">

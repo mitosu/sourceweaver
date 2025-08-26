@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  python-osint:
+    build:
+      context: ./python-osint
+      dockerfile: Dockerfile
+    container_name: sourceweaver_python_osint
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./python-osint/scripts:/app/scripts
+      - ./python-osint/logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY:-}
+      - ABUSEIPDB_API_KEY=${ABUSEIPDB_API_KEY:-}
+      - URLVOID_API_KEY=${URLVOID_API_KEY:-}
+      - URLVOID_IDENTIFIER=${URLVOID_IDENTIFIER:-}
+      - SHODAN_API_KEY=${SHODAN_API_KEY:-}
+      - LOG_LEVEL=INFO
+    networks:
+      - symfony
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  symfony:

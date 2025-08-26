@@ -227,6 +227,34 @@
 <script>
 let optionCounter = 0;
 
+function testApiConnection(configId) {
+    const originalHtml = event.target.innerHTML;
+    event.target.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Probando...';
+    event.target.disabled = true;
+    
+    fetch(`{{ path('api_configuration_test', {id: 'ID_PLACEHOLDER'}) }}`.replace('ID_PLACEHOLDER', configId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Prueba de conexión exitosa\n\n' + data.message);
+        } else {
+            alert('❌ Error en la prueba de conexión\n\n' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        alert('❌ Error en la prueba de conexión\n\nNo se pudo conectar con la API');
+    })
+    .finally(() => {
+        event.target.innerHTML = originalHtml;
+        event.target.disabled = false;
+    });
+}
+
 function toggleApiConfiguration(configId, button) {
     fetch(`/api-configuration/${configId}/toggle`, {
         method: 'POST',

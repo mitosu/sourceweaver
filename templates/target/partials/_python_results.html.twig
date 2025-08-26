@@ -1,0 +1,212 @@
+{# Template for displaying Python OSINT analysis results #}
+{% if data._metadata is defined %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-cpu me-1"></i>
+                        <strong>Análisis Python OSINT</strong> - Tiempo de ejecución: {{ data._metadata.execution_time|number_format(2) }}s
+                    </div>
+                    <small class="text-muted">{{ data._metadata.timestamp }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{# IP Analysis Results #}
+{% if data.ip is defined %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5><i class="bi bi-globe me-1"></i> Análisis de IP: <code>{{ data.ip }}</code></h5>
+        </div>
+    </div>
+
+    {# Geolocation #}
+    {% if data.geolocation is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i> Geolocalización</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>País:</strong> {{ data.geolocation.country }} ({{ data.geolocation.country_code }})</p>
+                        <p class="mb-1"><strong>Ciudad:</strong> {{ data.geolocation.city }}</p>
+                        <p class="mb-1"><strong>Región:</strong> {{ data.geolocation.region }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Coordenadas:</strong> {{ data.geolocation.latitude }}, {{ data.geolocation.longitude }}</p>
+                        <p class="mb-1"><strong>ISP:</strong> {{ data.geolocation.isp }}</p>
+                        <p class="mb-1"><strong>ASN:</strong> {{ data.geolocation.asn }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Reputation #}
+    {% if data.reputation is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-shield-check me-1"></i> Reputación</h6>
+            </div>
+            <div class="card-body">
+                {% if data.reputation.error is defined %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ data.reputation.error }}
+                    </div>
+                {% else %}
+                    {# Display reputation data when available #}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Puntuación:</strong> 
+                                <span class="badge bg-info">{{ data.reputation.score|default('N/A') }}</span>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# DNS Information #}
+    {% if data.dns_info is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-dns me-1"></i> Información DNS</h6>
+            </div>
+            <div class="card-body">
+                {% if data.dns_info.hostname is defined %}
+                    <p class="mb-1"><strong>Hostname:</strong> <code>{{ data.dns_info.hostname }}</code></p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# Threat Intelligence #}
+    {% if data.threat_intelligence is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-shield-exclamation me-1"></i> Inteligencia de Amenazas</h6>
+            </div>
+            <div class="card-body">
+                {% if data.threat_intelligence.error is defined %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ data.threat_intelligence.error }}
+                    </div>
+                {% else %}
+                    {# Display threat intelligence when available #}
+                    <p>Datos de inteligencia de amenazas disponibles</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# WHOIS Information #}
+    {% if data.whois is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-1"></i> Información WHOIS</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if data.whois.net_name is defined %}
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Nombre de red:</strong> {{ data.whois.net_name }}</p>
+                        </div>
+                    {% endif %}
+                    {% if data.whois.organization is defined %}
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Organización:</strong> {{ data.whois.organization }}</p>
+                        </div>
+                    {% endif %}
+                    {% if data.whois.country is defined %}
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>País:</strong> {{ data.whois.country }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Threat Score #}
+    {% if data.threat_score is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-speedometer me-1"></i> Puntuación de Amenaza</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="h2 mb-1">
+                                <span class="badge {% if data.threat_score.score == 0 %}bg-success{% elseif data.threat_score.score < 50 %}bg-warning{% else %}bg-danger{% endif %} fs-4">
+                                    {{ data.threat_score.score }}
+                                </span>
+                            </div>
+                            <p class="mb-0">Puntuación</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="h4 mb-1">
+                                <span class="badge {% if data.threat_score.level == 'clean' %}bg-success{% elseif data.threat_score.level == 'low' %}bg-info{% elseif data.threat_score.level == 'medium' %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ data.threat_score.level|title }}
+                                </span>
+                            </div>
+                            <p class="mb-0">Nivel de Riesgo</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="h4 mb-1">{{ data.threat_score.factors|length }}</div>
+                            <p class="mb-0">Factores de Riesgo</p>
+                        </div>
+                    </div>
+                </div>
+                {% if data.threat_score.factors|length > 0 %}
+                    <hr>
+                    <h6>Factores de Riesgo Detectados:</h6>
+                    {% for factor in data.threat_score.factors %}
+                        <span class="badge bg-warning me-1 mb-1">{{ factor }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+{# Domain Analysis Results #}
+{% if data.domain is defined %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5><i class="bi bi-globe2 me-1"></i> Análisis de Dominio: <code>{{ data.domain }}</code></h5>
+        </div>
+    </div>
+    {# Add domain-specific result sections here similar to IP analysis #}
+{% endif %}
+
+{# URL Analysis Results #}
+{% if data.url is defined %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5><i class="bi bi-link-45deg me-1"></i> Análisis de URL: <code>{{ data.url }}</code></h5>
+        </div>
+    </div>
+    {# Add URL-specific result sections here similar to IP analysis #}
+{% endif %}
+
+{# Generic data display for unknown structures #}
+{% if data.ip is not defined and data.domain is not defined and data.url is not defined %}
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-code me-1"></i> Datos de Análisis</h6>
+        </div>
+        <div class="card-body">
+            <pre class="bg-light p-3 rounded"><code>{{ data|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+        </div>
+    </div>
+{% endif %}

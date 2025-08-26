@@ -1,0 +1,324 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ investigation.name }} - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">{{ investigation.name }}</h1>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-folder me-1"></i>{{ investigation.workspace.name }} |
+                    <i class="bi bi-clock me-1"></i>Creada {{ investigation.createdAt|date('d/m/Y H:i') }}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ path('investigation_dashboard', {id: investigation.id}) }}" class="btn btn-outline-info">
+                    <i class="bi bi-graph-up me-1"></i>Dashboard
+                </a>
+                <a href="{{ path('investigation_edit', {id: investigation.id}) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Editar
+                </a>
+                <div class="btn-group">
+                    <a href="{{ path('target_new', {investigationId: investigation.id}) }}" class="btn btn-success">
+                        <i class="bi bi-plus me-1"></i>Añadir Target
+                    </a>
+                    <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ path('target_new', {investigationId: investigation.id}) }}">
+                            <i class="bi bi-plus me-2"></i>Añadir Target Individual
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ path('target_bulk_import', {investigationId: investigation.id}) }}">
+                            <i class="bi bi-list-ul me-2"></i>Importación Masiva
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Información de la Investigación
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if investigation.description %}
+                            <p class="mb-3">{{ investigation.description }}</p>
+                        {% else %}
+                            <p class="text-muted mb-3">Sin descripción</p>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Estado:</strong>
+                                <span class="badge {{ investigation.statusBadgeClass }} ms-2">
+                                    {{ investigation.status|title }}
+                                </span>
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Prioridad:</strong>
+                                <span class="badge {{ investigation.priorityBadgeClass }} ms-2">
+                                    {{ investigation.priority|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-bar-chart me-1"></i>Estadísticas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Targets:</span>
+                            <strong>{{ investigation.targets|length }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Analizados:</span>
+                            <strong>{{ investigation.targets|filter(t => t.status == 'analyzed')|length }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Pendientes:</span>
+                            <strong>{{ investigation.targets|filter(t => t.status == 'pending')|length }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Errores:</span>
+                            <strong>{{ investigation.targets|filter(t => t.status == 'error')|length }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-bullseye me-1"></i>Targets de Análisis
+                </h6>
+                <a href="{{ path('target_new', {investigationId: investigation.id}) }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-plus me-1"></i>Añadir Target
+                </a>
+            </div>
+            <div class="card-body">
+                {% if investigation.targets is empty %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-bullseye" style="font-size: 3rem; color: #dee2e6;"></i>
+                        <h5 class="mt-3 text-muted">No hay targets</h5>
+                        <p class="text-muted">Añade IPs, dominios, URLs o hashes para comenzar el análisis</p>
+                        <a href="{{ path('target_new', {investigationId: investigation.id}) }}" class="btn btn-primary">
+                            <i class="bi bi-plus me-1"></i>Añadir primer target
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th>Último Análisis</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for target in investigation.targets %}
+                                    <tr>
+                                        <td>
+                                            <i class="bi {{ target.typeIcon }} me-1"></i>
+                                            {{ target.type|upper }}
+                                        </td>
+                                        <td>
+                                            <code>{{ target.value }}</code>
+                                        </td>
+                                        <td>
+                                            {% if target.description %}
+                                                {{ target.description|slice(0, 50) }}{% if target.description|length > 50 %}...{% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ target.statusBadgeClass }}">
+                                                {{ target.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if target.lastAnalyzed %}
+                                                <small>{{ target.lastAnalyzed|date('d/m/Y H:i') }}</small>
+                                            {% else %}
+                                                <span class="text-muted">Nunca</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <form method="post" 
+                                                      action="{{ path('target_analyze', {investigationId: investigation.id, id: target.id}) }}" 
+                                                      class="d-inline">
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-info" 
+                                                            title="Analizar"
+                                                            {% if target.status == 'analyzing' %}disabled{% endif %}>
+                                                        {% if target.status == 'analyzing' %}
+                                                            <i class="bi bi-hourglass-split"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-search"></i>
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                                {% if target.analysisResults|length > 0 %}
+                                                    <a href="{{ path('target_results', {investigationId: investigation.id, id: target.id}) }}" 
+                                                       class="btn btn-outline-success" title="Ver Resultados">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                {% endif %}
+                                                <a href="{{ path('target_edit', {investigationId: investigation.id, id: target.id}) }}" 
+                                                   class="btn btn-outline-secondary" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form method="post" 
+                                                      action="{{ path('target_delete', {investigationId: investigation.id, id: target.id}) }}" 
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('¿Estás seguro de eliminar este target?')">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Activity Log Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-clock-history me-1"></i>Historial de Actividades
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="activity-log">
+                    <!-- Activity log will be loaded here via JavaScript -->
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted mt-2">Cargando historial de actividades...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadActivityLog();
+});
+
+function loadActivityLog() {
+    fetch(`{{ path('api_investigation_activity', {id: investigation.id}) }}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('activity-log');
+            
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock-history text-muted" style="font-size: 2rem;"></i>
+                        <h6 class="mt-3 text-muted">No hay actividades registradas</h6>
+                        <p class="text-muted">Las actividades aparecerán aquí cuando realices acciones en la investigación.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="timeline">';
+            
+            data.forEach(activity => {
+                const date = new Date(activity.createdAt);
+                const formattedDate = date.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                html += `
+                    <div class="timeline-item mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-${activity.color} rounded-pill">
+                                    <i class="${activity.icon}"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="mb-1">${activity.description}</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>${activity.user}
+                                            <i class="bi bi-clock ms-3 me-1"></i>${formattedDate}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading activity log:', error);
+            document.getElementById('activity-log').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="mt-3 text-muted">Error cargando actividades</h6>
+                    <p class="text-muted">No se pudo cargar el historial de actividades.</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadActivityLog()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                    </button>
+                </div>
+            `;
+        });
+}
+</script>
+
+<style>
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 32px;
+    bottom: -16px;
+    width: 2px;
+    background: #dee2e6;
+}
+</style>
+
+{% endblock %}

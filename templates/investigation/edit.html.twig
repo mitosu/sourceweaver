@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar {{ investigation.name }} - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Editar Investigación</h1>
+                <p class="text-muted mb-0">{{ investigation.name }}</p>
+            </div>
+            <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                        
+                        {{ form_row(form.name) }}
+                        {{ form_row(form.description) }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.workspace) }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form_row(form.status) }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form_row(form.priority) }}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-secondary">Cancelar</a>
+                            {{ form_widget(form.save, {'label': 'Actualizar investigación'}) }}
+                        </div>
+                        
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-clock-history me-1"></i>Información de la investigación
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small">
+                            <strong>Creada:</strong> {{ investigation.createdAt|date('d/m/Y H:i') }}
+                        </p>
+                        <p class="small">
+                            <strong>Creada por:</strong> {{ investigation.createdBy.email }}
+                        </p>
+                        {% if investigation.updatedAt %}
+                            <p class="small">
+                                <strong>Última actualización:</strong> {{ investigation.updatedAt|date('d/m/Y H:i') }}
+                            </p>
+                        {% endif %}
+                        <p class="small">
+                            <strong>Targets:</strong> {{ investigation.targets|length }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0 text-danger">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Zona de peligro
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            Eliminar esta investigación es permanente y eliminará todos los targets y resultados asociados.
+                        </p>
+                        <form method="post" 
+                              action="{{ path('investigation_delete', {id: investigation.id}) }}" 
+                              onsubmit="return confirm('¿Estás seguro de eliminar esta investigación? Esta acción no se puede deshacer.')">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash me-1"></i>Eliminar investigación
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

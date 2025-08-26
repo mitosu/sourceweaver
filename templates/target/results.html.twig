@@ -1,0 +1,319 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Resultados - {{ target.type|upper }}: {{ target.value }} - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="bi {{ target.typeIcon }} me-2"></i>Resultados del Análisis
+                </h1>
+                <p class="text-muted mb-0">
+                    {{ target.type|upper }}: <code>{{ target.value }}</code> | 
+                    Investigación: {{ investigation.name }}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <form method="post" 
+                      action="{{ path('target_analyze', {investigationId: investigation.id, id: target.id}) }}" 
+                      class="d-inline">
+                    <button type="submit" class="btn btn-outline-info">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Re-analizar
+                    </button>
+                </form>
+                <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver a la investigación
+                </a>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Información del Target
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Tipo:</strong> {{ target.type|upper }}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Estado:</strong> 
+                                <span class="badge {{ target.statusBadgeClass }}">{{ target.status|title }}</span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Creado:</strong> {{ target.createdAt|date('d/m/Y H:i') }}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Último análisis:</strong> 
+                                {% if target.lastAnalyzed %}
+                                    {{ target.lastAnalyzed|date('d/m/Y H:i') }}
+                                {% else %}
+                                    <span class="text-muted">Nunca</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if target.description %}
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <strong>Descripción:</strong> {{ target.description }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-bar-chart me-1"></i>Resumen de Resultados
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total análisis:</span>
+                            <strong>{{ results|length }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Exitosos:</span>
+                            <strong class="text-success">{{ results|filter(r => r.status == 'success')|length }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Con errores:</span>
+                            <strong class="text-danger">{{ results|filter(r => r.status == 'error')|length }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if results is empty %}
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>No hay resultados de análisis
+                </h5>
+                <p class="mb-3">
+                    Este target aún no ha sido analizado o no hay resultados disponibles.
+                </p>
+                <form method="post" 
+                      action="{{ path('target_analyze', {investigationId: investigation.id, id: target.id}) }}" 
+                      class="d-inline">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Realizar primer análisis
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            {% for result in results %}
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-gear me-1"></i>{{ result.source|title }}
+                        </h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge {{ result.statusBadgeClass }}">{{ result.status|title }}</span>
+                            <small class="text-muted">{{ result.analyzedAt|date('d/m/Y H:i') }}</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if result.status == 'error' %}
+                            <div class="alert alert-danger">
+                                <strong>Error:</strong> {{ result.errorMessage }}
+                            </div>
+                        {% else %}
+                            {% set data = result.data %}
+                            
+                            {# Handle FastAPI Python results #}
+                            {% if result.source == 'FastAPI-Python' %}
+                                {% include 'target/partials/_python_results.html.twig' with {data: data} %}
+                            
+                            {# Handle legacy simulated results #}
+                            {% elseif result.source == 'geolocation' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Ubicación</h6>
+                                        <p class="mb-1"><strong>País:</strong> {{ data.country }}</p>
+                                        <p class="mb-1"><strong>Ciudad:</strong> {{ data.city }}</p>
+                                        <p class="mb-3"><strong>Coordenadas:</strong> {{ data.latitude }}, {{ data.longitude }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Red</h6>
+                                        <p class="mb-1"><strong>ISP:</strong> {{ data.isp }}</p>
+                                        <p class="mb-1"><strong>Organización:</strong> {{ data.org }}</p>
+                                    </div>
+                                </div>
+                            {% elseif result.source == 'reputation' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Reputación</h6>
+                                        <p class="mb-1">
+                                            <strong>Puntuación:</strong> 
+                                            <span class="badge {% if data.reputation_score < 30 %}bg-danger{% elseif data.reputation_score < 70 %}bg-warning{% else %}bg-success{% endif %}">
+                                                {{ data.reputation_score }}/100
+                                            </span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>¿Malicioso?:</strong> 
+                                            <span class="badge {% if data.is_malicious %}bg-danger{% else %}bg-success{% endif %}">
+                                                {% if data.is_malicious %}Sí{% else %}No{% endif %}
+                                            </span>
+                                        </p>
+                                        {% if data.categories|length > 0 %}
+                                            <p class="mb-1"><strong>Categorías:</strong> {{ data.categories|join(', ') }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Reportes</h6>
+                                        <p class="mb-1"><strong>Total reportes:</strong> {{ data.reports_count }}</p>
+                                        {% if data.last_seen %}
+                                            <p class="mb-1"><strong>Última actividad:</strong> {{ data.last_seen|date('d/m/Y') }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% elseif result.source == 'dns' %}
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6>Registros A</h6>
+                                        {% for record in data.a_records %}
+                                            <p class="mb-1"><code>{{ record }}</code></p>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6>Registros MX</h6>
+                                        {% for record in data.mx_records %}
+                                            <p class="mb-1"><code>{{ record }}</code></p>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6>Registros NS</h6>
+                                        {% for record in data.ns_records %}
+                                            <p class="mb-1"><code>{{ record }}</code></p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% elseif result.source == 'whois' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información del dominio</h6>
+                                        <p class="mb-1"><strong>Registrador:</strong> {{ data.registrar }}</p>
+                                        <p class="mb-1"><strong>Estado:</strong> 
+                                            <span class="badge {% if data.status == 'active' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ data.status|title }}
+                                            </span>
+                                        </p>
+                                        <p class="mb-1"><strong>País registrante:</strong> {{ data.registrant_country }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Fechas importantes</h6>
+                                        <p class="mb-1"><strong>Creación:</strong> {{ data.creation_date }}</p>
+                                        <p class="mb-1"><strong>Expiración:</strong> {{ data.expiration_date }}</p>
+                                    </div>
+                                </div>
+                            {% elseif result.source == 'malware_scan' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Resultado del escaneo</h6>
+                                        <p class="mb-1">
+                                            <strong>¿Malicioso?:</strong> 
+                                            <span class="badge {% if data.is_malicious %}bg-danger{% else %}bg-success{% endif %}">
+                                                {% if data.is_malicious %}Sí{% else %}No{% endif %}
+                                            </span>
+                                        </p>
+                                        <p class="mb-1"><strong>Detecciones:</strong> {{ data.detections }}/{{ data.total_engines }}</p>
+                                        {% if data.is_malicious %}
+                                            <p class="mb-1">
+                                                <strong>Nivel de amenaza:</strong> 
+                                                <span class="badge {% if data.threat_level == 'high' %}bg-danger{% elseif data.threat_level == 'medium' %}bg-warning{% else %}bg-info{% endif %}">
+                                                    {{ data.threat_level|title }}
+                                                </span>
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% if data.is_malicious and data.malware_families|length > 0 %}
+                                            <h6>Familias de malware</h6>
+                                            {% for family in data.malware_families %}
+                                                <span class="badge bg-danger me-1">{{ family }}</span>
+                                            {% endfor %}
+                                        {% endif %}
+                                        <p class="mb-1 mt-2"><strong>Fecha de escaneo:</strong> {{ data.scan_date|date('d/m/Y H:i') }}</p>
+                                    </div>
+                                </div>
+                            {% elseif result.source == 'url_analysis' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Análisis de URL</h6>
+                                        <p class="mb-1">
+                                            <strong>¿Segura?:</strong> 
+                                            <span class="badge {% if data.is_safe %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if data.is_safe %}Sí{% else %}No{% endif %}
+                                            </span>
+                                        </p>
+                                        <p class="mb-1"><strong>Código de respuesta:</strong> {{ data.response_code }}</p>
+                                        <p class="mb-1"><strong>Redirecciones:</strong> {{ data.redirects }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Detalles</h6>
+                                        <p class="mb-1"><strong>Título:</strong> {{ data.title }}</p>
+                                        {% if data.categories|length > 0 %}
+                                            <p class="mb-1"><strong>Categorías:</strong> {{ data.categories|join(', ') }}</p>
+                                        {% endif %}
+                                        <p class="mb-1"><strong>URL final:</strong> <code>{{ data.final_url }}</code></p>
+                                    </div>
+                                </div>
+                            {% elseif result.source == 'email_validation' %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Validación de email</h6>
+                                        <p class="mb-1">
+                                            <strong>¿Válido?:</strong> 
+                                            <span class="badge {% if data.is_valid %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if data.is_valid %}Sí{% else %}No{% endif %}
+                                            </span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>¿Desechable?:</strong> 
+                                            <span class="badge {% if data.is_disposable %}bg-warning{% else %}bg-success{% endif %}">
+                                                {% if data.is_disposable %}Sí{% else %}No{% endif %}
+                                            </span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>MX válido:</strong> 
+                                            <span class="badge {% if data.mx_valid %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if data.mx_valid %}Sí{% else %}No{% endif %}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Información del dominio</h6>
+                                        <p class="mb-1"><strong>Edad del dominio:</strong> {{ data.domain_age_days }} días</p>
+                                        <p class="mb-1">
+                                            <strong>Reputación:</strong> 
+                                            <span class="badge {% if data.reputation == 'good' %}bg-success{% elseif data.reputation == 'neutral' %}bg-secondary{% else %}bg-danger{% endif %}">
+                                                {{ data.reputation|title }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <h6>Datos sin procesar</h6>
+                                    <pre class="mb-0"><code>{{ data|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

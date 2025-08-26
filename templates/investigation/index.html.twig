@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Investigaciones - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Mis Investigaciones</h1>
+            <a href="{{ path('investigation_new') }}" class="btn btn-primary">
+                <i class="bi bi-plus me-1"></i>Nueva Investigación
+            </a>
+        </div>
+
+        {% if investigations is empty %}
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>No tienes investigaciones
+                </h5>
+                <p class="mb-3">
+                    Aún no has creado ninguna investigación. Las investigaciones te permiten:
+                </p>
+                <ul class="mb-3">
+                    <li>Organizar targets de análisis (IPs, dominios, URLs, hashes, etc.)</li>
+                    <li>Ejecutar análisis automáticos usando APIs de OSINT</li>
+                    <li>Generar reportes consolidados de los resultados</li>
+                    <li>Colaborar con otros miembros del workspace</li>
+                </ul>
+                <hr>
+                <a href="{{ path('investigation_new') }}" class="btn btn-primary">
+                    <i class="bi bi-plus me-1"></i>Crear mi primera investigación
+                </a>
+            </div>
+        {% else %}
+            <div class="row">
+                {% for investigation in investigations %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-search me-1"></i>{{ investigation.name }}
+                                </h6>
+                                <div class="d-flex gap-1">
+                                    <span class="badge {{ investigation.statusBadgeClass }}">
+                                        {{ investigation.status|title }}
+                                    </span>
+                                    <span class="badge {{ investigation.priorityBadgeClass }}">
+                                        {{ investigation.priority|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% if investigation.description %}
+                                    <p class="card-text small text-muted">
+                                        {{ investigation.description|slice(0, 100) }}{% if investigation.description|length > 100 %}...{% endif %}
+                                    </p>
+                                {% endif %}
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-folder me-1"></i>{{ investigation.workspace.name }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="bi bi-bullseye me-1"></i>{{ investigation.targets|length }} targets
+                                    </small>
+                                </div>
+                                
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>{{ investigation.createdAt|date('d/m/Y H:i') }}
+                                </small>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye me-1"></i>Ver
+                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ path('investigation_edit', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="{{ path('investigation_delete', {id: investigation.id}) }}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar esta investigación?')">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

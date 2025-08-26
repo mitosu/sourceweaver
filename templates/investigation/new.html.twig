@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nueva Investigación - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Nueva Investigación</h1>
+            <a href="{{ path('investigation_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                        
+                        {{ form_row(form.name) }}
+                        {{ form_row(form.description) }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.workspace) }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form_row(form.status) }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form_row(form.priority) }}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ path('investigation_index') }}" class="btn btn-secondary">Cancelar</a>
+                            {{ form_widget(form.save) }}
+                        </div>
+                        
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Información
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <h6>¿Qué es una investigación?</h6>
+                        <p class="small text-muted">
+                            Una investigación es un contenedor para organizar y analizar targets relacionados 
+                            en un contexto específico.
+                        </p>
+                        
+                        <h6>Estados disponibles</h6>
+                        <ul class="small text-muted">
+                            <li><strong>Borrador:</strong> En preparación</li>
+                            <li><strong>Activa:</strong> En progreso</li>
+                            <li><strong>Completada:</strong> Finalizada</li>
+                            <li><strong>Archivada:</strong> Para referencia</li>
+                        </ul>
+                        
+                        <h6>Prioridades</h6>
+                        <ul class="small text-muted">
+                            <li><strong>Baja:</strong> Sin urgencia</li>
+                            <li><strong>Media:</strong> Prioridad normal</li>
+                            <li><strong>Alta:</strong> Requiere atención</li>
+                            <li><strong>Urgente:</strong> Crítica</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

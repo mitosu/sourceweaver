@@ -1,0 +1,37 @@
+{
+    "name": "VirusTotal",
+    "description": "Antivirus engine and website scanner that analyzes files and URLs to detect malware and other threats",
+    "documentation_url": "https://developers.virustotal.com/reference",
+    "options": [
+        {
+            "name": "api_key",
+            "label": "API Key",
+            "type": "password",
+            "required": true,
+            "description": "Your VirusTotal API key (get it from https://www.virustotal.com/gui/user/apikey)"
+        },
+        {
+            "name": "base_url",
+            "label": "Base URL",
+            "type": "text",
+            "required": true,
+            "value": "https://www.virustotal.com",
+            "description": "VirusTotal API base URL"
+        },
+        {
+            "name": "rate_limit",
+            "label": "Rate Limit (requests per minute)",
+            "type": "number",
+            "required": false,
+            "value": "4",
+            "description": "API rate limit for free accounts (4 requests/minute)"
+        }
+    ],
+    "supported_targets": ["ip", "domain", "url", "hash"],
+    "endpoints": {
+        "ip": "/api/v3/ip_addresses/{ip}",
+        "domain": "/api/v3/domains/{domain}",
+        "url": "/api/v3/urls/{url_id}",
+        "hash": "/api/v3/files/{hash}"
+    }
+}

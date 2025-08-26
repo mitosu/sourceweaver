@@ -1,0 +1,396 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - {{ investigation.name }} - IRONWHISPER{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="bi bi-graph-up me-2"></i>Dashboard de Investigación
+                </h1>
+                <p class="text-muted mb-0">{{ investigation.name }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="refreshDashboard()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                </button>
+                <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Loading spinner -->
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando dashboard...</p>
+        </div>
+
+        <!-- Main dashboard content -->
+        <div id="dashboard-content" style="display: none;">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-primary" id="stat-total-targets">0</h3>
+                            <p class="card-text">Total Targets</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-success" id="stat-analyzed-targets">0</h3>
+                            <p class="card-text">Analizados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-warning" id="stat-pending-targets">0</h3>
+                            <p class="card-text">Pendientes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-info" id="stat-total-results">0</h3>
+                            <p class="card-text">Resultados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-pie-chart me-1"></i>Distribución de Tipos
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="typeDistributionChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-bar-chart me-1"></i>Estados de Análisis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="statusChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-activity me-1"></i>Actividad Reciente (7 días)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="activityChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-shield-exclamation me-1"></i>Niveles de Amenaza
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="threatChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threats and Timeline -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Principales Amenazas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="threats-list">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    <p class="mt-2 small">Analizando amenazas...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-clock-history me-1"></i>Línea de Tiempo
+                            </h6>
+                        </div>
+                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                            <div id="timeline-list">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    <p class="mt-2 small">Cargando actividad...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+let charts = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard();
+});
+
+async function loadDashboard() {
+    try {
+        const [statsResponse, timelineResponse, threatsResponse] = await Promise.all([
+            fetch('{{ path('investigation_dashboard_stats', {id: investigation.id}) }}'),
+            fetch('{{ path('investigation_dashboard_timeline', {id: investigation.id}) }}'),
+            fetch('{{ path('investigation_dashboard_threats', {id: investigation.id}) }}')
+        ]);
+
+        const stats = await statsResponse.json();
+        const timeline = await timelineResponse.json();
+        const threats = await threatsResponse.json();
+
+        updateStats(stats.stats);
+        createCharts(stats);
+        updateTimeline(timeline.timeline);
+        updateThreats(threats.threats);
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboard-content').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        document.getElementById('loading').innerHTML = `
+            <div class="alert alert-danger">
+                <h5>Error al cargar el dashboard</h5>
+                <p>Ha ocurrido un error al cargar los datos del dashboard.</p>
+                <button class="btn btn-outline-danger" onclick="loadDashboard()">Reintentar</button>
+            </div>
+        `;
+    }
+}
+
+function updateStats(stats) {
+    document.getElementById('stat-total-targets').textContent = stats.total_targets;
+    document.getElementById('stat-analyzed-targets').textContent = stats.analyzed_targets;
+    document.getElementById('stat-pending-targets').textContent = stats.pending_targets;
+    document.getElementById('stat-total-results').textContent = stats.total_results;
+}
+
+function createCharts(data) {
+    // Type Distribution Chart
+    const typeCtx = document.getElementById('typeDistributionChart').getContext('2d');
+    charts.typeChart = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(data.typeDistribution),
+            datasets: [{
+                data: Object.values(data.typeDistribution),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    charts.statusChart = new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(data.statusDistribution).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+            datasets: [{
+                label: 'Targets',
+                data: Object.values(data.statusDistribution),
+                backgroundColor: [
+                    '#28a745', '#ffc107', '#dc3545', '#17a2b8'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    charts.activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(data.recentActivity),
+            datasets: [{
+                label: 'Análisis realizados',
+                data: Object.values(data.recentActivity),
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Threat Levels Chart
+    const threatCtx = document.getElementById('threatChart').getContext('2d');
+    charts.threatChart = new Chart(threatCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Limpio', 'Bajo', 'Medio', 'Alto', 'Crítico'],
+            datasets: [{
+                data: [
+                    data.threatLevels.clean,
+                    data.threatLevels.low,
+                    data.threatLevels.medium,
+                    data.threatLevels.high,
+                    data.threatLevels.critical
+                ],
+                backgroundColor: [
+                    '#28a745', '#ffc107', '#fd7e14', '#dc3545', '#6f42c1'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        fontSize: 10
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateTimeline(timeline) {
+    const timelineHtml = timeline.map(event => {
+        const date = new Date(event.date).toLocaleString();
+        return `
+            <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0">
+                    <span class="badge bg-${event.color} rounded-pill">
+                        <i class="bi ${event.icon}"></i>
+                    </span>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h6 class="mb-1">${event.title}</h6>
+                    <p class="mb-1 small text-muted">${event.description}</p>
+                    <small class="text-muted">${date}</small>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('timeline-list').innerHTML = timelineHtml || '<p class="text-muted">No hay actividad reciente</p>';
+}
+
+function updateThreats(threats) {
+    const threatsHtml = threats.map(threat => {
+        const levelClass = {
+            'critical': 'danger',
+            'high': 'warning',
+            'medium': 'info',
+            'low': 'secondary'
+        }[threat.level] || 'secondary';
+
+        return `
+            <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0">
+                    <span class="badge bg-${levelClass}">${threat.level.toUpperCase()}</span>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h6 class="mb-1">${threat.target_type.toUpperCase()}: ${threat.target_value}</h6>
+                    <p class="mb-1 small text-muted">${threat.description}</p>
+                    <small class="text-muted">Fuente: ${threat.source}</small>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('threats-list').innerHTML = threatsHtml || '<p class="text-muted">No se han detectado amenazas</p>';
+}
+
+function refreshDashboard() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('dashboard-content').style.display = 'none';
+    
+    // Destroy existing charts
+    Object.values(charts).forEach(chart => chart.destroy());
+    charts = {};
+    
+    loadDashboard();
+}
+</script>
+{% endblock %}

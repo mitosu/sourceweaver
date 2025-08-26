@@ -1,0 +1,42 @@
+{
+    "name": "AbuseIPDB",
+    "description": "IP address reputation database that helps identify malicious IP addresses",
+    "documentation_url": "https://docs.abuseipdb.com/",
+    "options": [
+        {
+            "name": "api_key",
+            "label": "API Key",
+            "type": "password",
+            "required": true,
+            "description": "Your AbuseIPDB API key (get it from https://www.abuseipdb.com/account/api)"
+        },
+        {
+            "name": "base_url",
+            "label": "Base URL",
+            "type": "text",
+            "required": true,
+            "value": "https://api.abuseipdb.com",
+            "description": "AbuseIPDB API base URL"
+        },
+        {
+            "name": "max_age_days",
+            "label": "Max Age in Days",
+            "type": "number",
+            "required": false,
+            "value": "90",
+            "description": "Maximum age of reports to include (1-365 days)"
+        },
+        {
+            "name": "rate_limit",
+            "label": "Rate Limit (requests per day)",
+            "type": "number",
+            "required": false,
+            "value": "1000",
+            "description": "API rate limit for free accounts (1000 requests/day)"
+        }
+    ],
+    "supported_targets": ["ip"],
+    "endpoints": {
+        "ip": "/api/v2/check"
+    }
+}
