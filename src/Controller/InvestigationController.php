@@ -21,12 +21,33 @@ final class InvestigationController extends AbstractController
 {
     #[Route('/', name: 'investigation_index')]
     public function index(
+        Request $request,
         InvestigationRepository $repository,
         GetUserWorkspaces $getUserWorkspaces
     ): Response {
         $user = $this->getUser();
-        $investigations = $repository->findByUser($user);
         $workspaces = $getUserWorkspaces($user);
+
+        // Obtener filtros de la solicitud
+        $nameFilter = $request->query->get('name');
+        $priorityFilter = $request->query->get('priority');
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 20;
+
+        // Obtener investigaciones con filtros y paginación
+        $investigations = $repository->findByUserWithFilters($user, $nameFilter, $priorityFilter, $page, $limit);
+        $totalInvestigations = $repository->countByUserWithFilters($user, $nameFilter, $priorityFilter);
+        
+        // Calcular información de paginación
+        $totalPages = max(1, ceil($totalInvestigations / $limit));
+        $pagination = [
+            'current' => $page,
+            'total' => $totalPages,
+            'hasNext' => $page < $totalPages,
+            'hasPrev' => $page > 1,
+            'next' => $page + 1,
+            'prev' => $page - 1
+        ];
 
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => $this->generateUrl('dashboard'), 'icon' => 'bi bi-house-door'],
@@ -36,7 +57,13 @@ final class InvestigationController extends AbstractController
         return $this->render('investigation/index.html.twig', [
             'investigations' => $investigations,
             'workspaces' => $workspaces,
-            'breadcrumbs' => $breadcrumbs
+            'breadcrumbs' => $breadcrumbs,
+            'pagination' => $pagination,
+            'filters' => [
+                'name' => $nameFilter,
+                'priority' => $priorityFilter
+            ],
+            'totalInvestigations' => $totalInvestigations
         ]);
     }
 

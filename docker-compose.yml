@@ -17,7 +17,7 @@ services:
       - symfony
 
   web:
-    image: nginx:alpine
+    image: nginx:latest
     container_name: sourceweaver_nginx
     ports:
       - "8080:80"

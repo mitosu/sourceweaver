@@ -22,20 +22,20 @@ final class DashboardController extends AbstractController
         $user = $this->getUser();
         $workspaces = $getUserWorkspaces($user);
         
-        // Estadísticas del dashboard
-        $investigations = $investigationRepository->findByUser($user);
+        // Estadísticas del dashboard - obtener todas las investigaciones para estadísticas
+        $allInvestigations = $investigationRepository->findByUser($user);
         $recentActivity = $activityLogRepository->findRecentActivity(7, 10);
         
         // Calcular estadísticas
         $stats = [
-            'total_investigations' => count($investigations),
-            'active_investigations' => count(array_filter($investigations, fn($i) => $i->getStatus() === 'active')),
-            'completed_investigations' => count(array_filter($investigations, fn($i) => $i->getStatus() === 'completed')),
-            'total_targets' => array_sum(array_map(fn($i) => count($i->getTargets()), $investigations)),
+            'total_investigations' => count($allInvestigations),
+            'active_investigations' => count(array_filter($allInvestigations, fn($i) => $i->getStatus() === 'active')),
+            'completed_investigations' => count(array_filter($allInvestigations, fn($i) => $i->getStatus() === 'completed')),
+            'total_targets' => array_sum(array_map(fn($i) => count($i->getTargets()), $allInvestigations)),
         ];
         
-        // Investigaciones recientes
-        $recentInvestigations = array_slice($investigations, 0, 5);
+        // Obtener las 5 investigaciones más recientes
+        $recentInvestigations = $investigationRepository->findRecentByUser($user, 5);
         
         $breadcrumbs = [
             ['label' => 'Dashboard', 'icon' => 'bi bi-house-door']
