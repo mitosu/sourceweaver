@@ -8,88 +8,154 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 mb-1">{{ workspace.name }}</h1>
-                <p class="text-muted mb-0">Espacio de trabajo colaborativo</p>
+                <p class="text-muted mb-0">{{ totalInvestigations }} investigaciones encontradas</p>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Información del Workspace
-                        </h5>
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" action="{{ path('workspace_show', {id: workspace.id}) }}" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="name" class="form-label">Filtrar por nombre</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ filters.name }}" placeholder="Buscar por nombre...">
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-muted">Nombre</h6>
-                                <p class="mb-3">{{ workspace.name }}</p>
+                    <div class="col-md-4">
+                        <label for="priority" class="form-label">Filtrar por prioridad</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="">Todas las prioridades</option>
+                            <option value="low" {{ filters.priority == 'low' ? 'selected' : '' }}>Baja</option>
+                            <option value="medium" {{ filters.priority == 'medium' ? 'selected' : '' }}>Media</option>
+                            <option value="high" {{ filters.priority == 'high' ? 'selected' : '' }}>Alta</option>
+                            <option value="critical" {{ filters.priority == 'critical' ? 'selected' : '' }}>Crítica</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-search me-1"></i>Filtrar
+                            </button>
+                            <a href="{{ path('workspace_show', {id: workspace.id}) }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if investigations is empty %}
+            <div class="alert alert-info text-center">
+                <i class="bi bi-search fs-1 text-muted"></i>
+                <h5 class="mt-3">
+                    {% if filters.name or filters.priority %}
+                        No se encontraron investigaciones con los filtros aplicados
+                    {% else %}
+                        No hay investigaciones en este workspace
+                    {% endif %}
+                </h5>
+                {% if filters.name or filters.priority %}
+                    <p class="mb-3">Intenta ajustar los filtros o eliminarlos para ver más resultados.</p>
+                    <a href="{{ path('workspace_show', {id: workspace.id}) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar filtros
+                    </a>
+                {% else %}
+                    <p class="mb-3">
+                        Este workspace no contiene investigaciones. Las investigaciones se crean desde la sección principal de investigaciones.
+                    </p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="row">
+                {% for investigation in investigations %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-search me-1"></i>{{ investigation.name }}
+                                </h6>
+                                <div class="d-flex gap-1">
+                                    <span class="badge {{ investigation.statusBadgeClass }}">
+                                        {{ investigation.status|title }}
+                                    </span>
+                                    <span class="badge {{ investigation.priorityBadgeClass }}">
+                                        {{ investigation.priority|title }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted">Descripción</h6>
-                                <p class="mb-3">{{ workspace.description ?? 'Sin descripción disponible' }}</p>
+                            <div class="card-body">
+                                {% if investigation.description %}
+                                    <p class="card-text small text-muted">
+                                        {{ investigation.description|slice(0, 100) }}{% if investigation.description|length > 100 %}...{% endif %}
+                                    </p>
+                                {% endif %}
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person me-1"></i>{{ investigation.createdBy.email }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="bi bi-bullseye me-1"></i>{{ investigation.targets|length }} targets
+                                    </small>
+                                </div>
+                                
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>{{ investigation.createdAt|date('d/m/Y H:i') }}
+                                </small>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ path('investigation_show', {id: investigation.id}) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye me-1"></i>Ver
+                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ path('investigation_edit', {id: investigation.id}) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="{{ path('investigation_delete', {id: investigation.id}) }}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar esta investigación?')">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if pagination.total > 1 %}
+                <nav aria-label="Paginación de investigaciones">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {{ not pagination.hasPrev ? 'disabled' : '' }}">
+                            <a class="page-link" href="{{ pagination.hasPrev ? path('workspace_show', {id: workspace.id, page: pagination.prev, name: filters.name, priority: filters.priority}) : '#' }}">
+                                <i class="bi bi-chevron-left"></i> Anterior
+                            </a>
+                        </li>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-muted">Creado</h6>
-                                <p class="mb-3">{{ workspace.createdAt|date('d/m/Y H:i') }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted">Estado</h6>
-                                <span class="badge bg-success">Activo</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-gear me-2"></i>
-                            Acciones
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="{{ path('investigation_index') }}" class="btn btn-primary">
-                                <i class="bi bi-search me-2"></i>
-                                Ver Investigaciones
+                        {% for page in range(max(1, pagination.current - 2), min(pagination.total, pagination.current + 2)) %}
+                            <li class="page-item {{ page == pagination.current ? 'active' : '' }}">
+                                <a class="page-link" href="{{ path('workspace_show', {id: workspace.id, page: page, name: filters.name, priority: filters.priority}) }}">
+                                    {{ page }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                        
+                        <li class="page-item {{ not pagination.hasNext ? 'disabled' : '' }}">
+                            <a class="page-link" href="{{ pagination.hasNext ? path('workspace_show', {id: workspace.id, page: pagination.next, name: filters.name, priority: filters.priority}) : '#' }}">
+                                Siguiente <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="{{ path('dashboard') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-house-door me-2"></i>
-                                Volver al Dashboard
-                            </a>
-                        </div>
+                        </li>
+                    </ul>
+                    <div class="text-center text-muted">
+                        Página {{ pagination.current }} de {{ pagination.total }} - {{ totalInvestigations }} investigaciones en total
                     </div>
-                </div>
-
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-people me-2"></i>
-                            Acceso
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
-                                <i class="bi bi-check-circle text-success"></i>
-                            </div>
-                            <div>
-                                <p class="mb-1 fw-medium">Miembro Activo</p>
-                                <small class="text-muted">Tienes acceso completo a este workspace</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                </nav>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

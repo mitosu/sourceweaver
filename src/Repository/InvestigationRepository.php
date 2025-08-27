@@ -138,4 +138,56 @@ class InvestigationRepository extends ServiceEntityRepository
         $stmt = $conn->executeQuery($sql, $params);
         return (int) $stmt->fetchOne();
     }
+
+    public function findByWorkspaceWithFilters(Workspace $workspace, ?string $name = null, ?string $priority = null, int $page = 1, int $limit = 20): array
+    {
+        $sql = 'SELECT * FROM investigation WHERE workspace_id = UNHEX(REPLACE(?, "-", ""))';
+        $params = [$workspace->getId()];
+        
+        if ($name) {
+            $sql .= ' AND name LIKE ?';
+            $params[] = '%' . $name . '%';
+        }
+        
+        if ($priority) {
+            $sql .= ' AND priority = ?';
+            $params[] = $priority;
+        }
+        
+        $sql .= ' ORDER BY created_at DESC LIMIT ' . $limit . ' OFFSET ' . (($page - 1) * $limit);
+        
+        $conn = $this->getEntityManager()->getConnection();
+        $stmt = $conn->executeQuery($sql, $params);
+        $results = $stmt->fetchAllAssociative();
+        
+        // Convert results to entities
+        $investigations = [];
+        foreach ($results as $result) {
+            $investigation = $this->find($result['id']);
+            if ($investigation) {
+                $investigations[] = $investigation;
+            }
+        }
+        return $investigations;
+    }
+
+    public function countByWorkspaceWithFilters(Workspace $workspace, ?string $name = null, ?string $priority = null): int
+    {
+        $sql = 'SELECT COUNT(*) FROM investigation WHERE workspace_id = UNHEX(REPLACE(?, "-", ""))';
+        $params = [$workspace->getId()];
+        
+        if ($name) {
+            $sql .= ' AND name LIKE ?';
+            $params[] = '%' . $name . '%';
+        }
+        
+        if ($priority) {
+            $sql .= ' AND priority = ?';
+            $params[] = $priority;
+        }
+        
+        $conn = $this->getEntityManager()->getConnection();
+        $stmt = $conn->executeQuery($sql, $params);
+        return (int) $stmt->fetchOne();
+    }
 }

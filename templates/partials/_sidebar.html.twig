@@ -28,10 +28,11 @@
                     </div>
                 </li>
                 {% for ws in workspaces %}
+                    {% set workspaceId = ws.id is defined ? ws.id : ws %}
                     <li class="nav-item">
-                        <a class="nav-link {{ app.request.get('_route') == 'workspace_show' and app.request.get('id') == ws.id ? 'active' : '' }}" href="{{ path('workspace_show', {id: ws.id}) }}">
+                        <a class="nav-link {{ app.request.get('_route') == 'workspace_show' and app.request.get('id') == workspaceId ? 'active' : '' }}" href="{{ path('workspace_show', {id: workspaceId}) }}">
                             <i class="bi bi-folder2 me-2"></i>
-                            <span class="sidebar-label">{{ ws.name }}</span>
+                            <span class="sidebar-label">{{ ws.name is defined ? ws.name : 'Workspace' }}</span>
                         </a>
                     </li>
                 {% endfor %}
