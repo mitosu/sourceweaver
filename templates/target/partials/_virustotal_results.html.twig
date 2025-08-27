@@ -1,0 +1,214 @@
+{# VirusTotal Results Template #}
+<div class="virustotal-results">
+    {% if data.resource_type is defined %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-shield-check me-2 text-primary"></i>
+                        Análisis VirusTotal - {{ data.resource_type|upper }}
+                    </h6>
+                    {% if data.status is defined %}
+                        <span class="badge {% if data.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ data.status|title }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Detection Statistics #}
+        {% if data.stats is defined %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="text-muted mb-3">Estadísticas de Detección</h6>
+                    <div class="row">
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-success text-white h-100">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ data.stats.harmless ?? 0 }}</h4>
+                                    <p class="card-text mb-0">Inofensivo</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-danger text-white h-100">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ data.stats.malicious ?? 0 }}</h4>
+                                    <p class="card-text mb-0">Malicioso</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-warning text-white h-100">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ data.stats.suspicious ?? 0 }}</h4>
+                                    <p class="card-text mb-0">Sospechoso</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-secondary text-white h-100">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ data.stats.undetected ?? 0 }}</h4>
+                                    <p class="card-text mb-0">No detectado</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# Reputation Score #}
+        {% if data.attributes.reputation is defined %}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-3">Puntuación de Reputación</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            {% set reputation = data.attributes.reputation %}
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar {% if reputation > 0 %}bg-success{% elseif reputation == 0 %}bg-secondary{% else %}bg-danger{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ ((reputation + 1000) / 2000 * 100)|round }}%">
+                                    {{ reputation }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        {% if reputation > 500 %}Muy buena reputación
+                        {% elseif reputation > 0 %}Buena reputación
+                        {% elseif reputation == 0 %}Reputación neutral
+                        {% else %}Mala reputación{% endif %}
+                    </small>
+                </div>
+            </div>
+        {% endif %}
+
+        {# Additional Attributes based on resource type #}
+        {% if data.attributes is defined %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="text-muted mb-3">Información Adicional</h6>
+                    <div class="row">
+                        {# IP Information #}
+                        {% if target_type == 'ip' and data.attributes.country is defined %}
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>País:</strong> {{ data.attributes.country }}</p>
+                                {% if data.attributes.as_owner is defined %}
+                                    <p class="mb-2"><strong>AS Owner:</strong> {{ data.attributes.as_owner }}</p>
+                                {% endif %}
+                                {% if data.attributes.asn is defined %}
+                                    <p class="mb-2"><strong>ASN:</strong> {{ data.attributes.asn }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {# Domain Information #}
+                        {% if target_type == 'domain' and data.attributes.categories is defined %}
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Categorías:</strong></p>
+                                {% for engine, category in data.attributes.categories|slice(0, 5) %}
+                                    <span class="badge bg-info me-1">{{ category }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {# Hash/File Information #}
+                        {% if target_type == 'hash' and data.attributes.sha256 is defined %}
+                            <div class="col-md-6">
+                                {% if data.attributes.sha256 is defined %}
+                                    <p class="mb-2"><strong>SHA256:</strong> <code class="small">{{ data.attributes.sha256[:32] }}...</code></p>
+                                {% endif %}
+                                {% if data.attributes.size is defined %}
+                                    <p class="mb-2"><strong>Tamaño:</strong> {{ (data.attributes.size / 1024)|round(2) }} KB</p>
+                                {% endif %}
+                                {% if data.attributes.type_description is defined %}
+                                    <p class="mb-2"><strong>Tipo:</strong> {{ data.attributes.type_description }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# Top Detection Engines (if available) #}
+        {% if data.engines is defined %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="text-muted mb-3">Detecciones Principales (Top 10)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Motor</th>
+                                    <th>Resultado</th>
+                                    <th>Categoría</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set engine_count = 0 %}
+                                {% for engine_name, engine_data in data.engines %}
+                                    {% if engine_count < 10 %}
+                                        <tr>
+                                            <td>{{ engine_name }}</td>
+                                            <td>
+                                                {% if engine_data.result is defined %}
+                                                    <code class="small">{{ engine_data.result }}</code>
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if engine_data.category is defined %}
+                                                    <span class="badge 
+                                                        {% if engine_data.category == 'malicious' %}bg-danger
+                                                        {% elseif engine_data.category == 'suspicious' %}bg-warning
+                                                        {% elseif engine_data.category == 'harmless' %}bg-success
+                                                        {% else %}bg-secondary{% endif %}">
+                                                        {{ engine_data.category|title }}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% set engine_count = engine_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# VirusTotal Link #}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span>Ver análisis completo en VirusTotal: </span>
+                        <a href="https://www.virustotal.com/gui/{{ data.resource_type|lower }}-address/{{ data.resource_id }}" 
+                           target="_blank" 
+                           class="btn btn-sm btn-outline-primary ms-2">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir en VirusTotal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {# Fallback for unknown VirusTotal response format #}
+        <div class="alert alert-warning">
+            <h6 class="alert-heading">Formato de respuesta no reconocido</h6>
+            <p class="mb-3">Los datos de VirusTotal no están en el formato esperado.</p>
+            <details>
+                <summary>Ver datos sin procesar</summary>
+                <pre class="mt-2 mb-0"><code>{{ data|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+            </details>
+        </div>
+    {% endif %}
+</div>

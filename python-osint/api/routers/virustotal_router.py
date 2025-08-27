@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from urllib.parse import quote_plus
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query
 from fastapi.responses import JSONResponse
 
 from api.clients import VirusTotalClient, VirusTotalAPIError
@@ -38,6 +38,7 @@ async def get_virustotal_client():
         )
     
     client = VirusTotalClient(settings.virustotal_api_key)
+    await client._create_session()
     try:
         yield client
     finally:
@@ -218,6 +219,51 @@ async def analyze_url(
         logger.error(f"URL analysis failed: {e}")
         raise HTTPException(status_code=500, detail="URL analysis failed")
 
+@router.get("/url-scan", response_model=VirusTotalAnalysisResult)
+async def analyze_url_by_string(
+    url: str = Query(..., description="URL to analyze"),
+    client: VirusTotalClient = Depends(get_virustotal_client)
+):
+    """Analyze URL and get results by URL string (convenience endpoint)"""
+    try:
+        logger.info(f"Starting URL analysis for: {url}")
+        
+        # First, create URL ID from base64 encoding (this is how VirusTotal identifies URLs)
+        url_id = base64.urlsafe_b64encode(url.encode()).decode().rstrip('=')
+        logger.info(f"Generated URL ID: {url_id}")
+        
+        # Try to get existing analysis first
+        try:
+            logger.info(f"Checking existing analysis for URL ID: {url_id}")
+            result = await client.get_url_analysis(url_id)
+            logger.info("Found existing URL analysis")
+            return _convert_vt_response_to_analysis_result(result, "url")
+        except VirusTotalAPIError as e:
+            if e.status_code == 404:
+                logger.info("No existing analysis found, submitting URL for new analysis")
+                # Submit URL for analysis
+                submit_result = await client.analyze_url(url)
+                logger.info(f"URL submitted successfully: {submit_result}")
+                
+                # Return processing status
+                analysis_id = submit_result.get('data', {}).get('id', url_id)
+                return VirusTotalAnalysisResult(
+                    resource_type="url",
+                    resource_id=analysis_id,
+                    status="processing",
+                    message="URL submitted for analysis. Please check back in a few minutes.",
+                    permalink=f"https://www.virustotal.com/gui/url/{url_id}"
+                )
+            else:
+                logger.error(f"Error checking existing analysis: {e.message}")
+                raise HTTPException(status_code=400, detail=f"VirusTotal API error: {e.message}")
+            
+    except VirusTotalAPIError as e:
+        raise HTTPException(status_code=400, detail=f"VirusTotal API error: {e.message}")
+    except Exception as e:
+        logger.error(f"URL analysis by string failed: {e}")
+        raise HTTPException(status_code=500, detail="URL analysis failed")
+
 @router.get("/urls/{url_id}", response_model=VirusTotalAnalysisResult)
 async def get_url_analysis(
     url_id: str,
@@ -236,41 +282,6 @@ async def get_url_analysis(
     except Exception as e:
         logger.error(f"Get URL analysis failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve URL analysis")
-
-@router.post("/urls/analyze-by-url", response_model=VirusTotalAnalysisResult)
-async def analyze_url_by_string(
-    url: str,
-    client: VirusTotalClient = Depends(get_virustotal_client)
-):
-    """Analyze URL and get results by URL string (convenience endpoint)"""
-    try:
-        # First, submit for analysis
-        async with client:
-            submit_result = await client.analyze_url(url)
-            
-            # Try to get existing analysis using base64 encoded URL
-            url_id = base64.urlsafe_b64encode(url.encode()).decode().rstrip('=')
-            
-            try:
-                result = await client.get_url_analysis(url_id)
-                return _convert_vt_response_to_analysis_result(result, "url")
-            except VirusTotalAPIError as e:
-                if e.status_code == 404:
-                    # Return processing status if no previous analysis exists
-                    analysis_id = submit_result.get('data', {}).get('id')
-                    return VirusTotalAnalysisResult(
-                        resource_type="url",
-                        resource_id=analysis_id or url_id,
-                        status="processing",
-                        permalink=f"https://www.virustotal.com/gui/url/{url_id}"
-                    )
-                raise
-            
-    except VirusTotalAPIError as e:
-        raise HTTPException(status_code=400, detail=f"VirusTotal API error: {e.message}")
-    except Exception as e:
-        logger.error(f"URL analysis by string failed: {e}")
-        raise HTTPException(status_code=500, detail="URL analysis failed")
 
 # Domain Analysis Endpoints
 @router.get("/domains/{domain}", response_model=VirusTotalAnalysisResult)

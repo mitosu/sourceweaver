@@ -198,6 +198,7 @@ class VirusTotalAnalysisResult(BaseModel):
     analysis_date: Optional[datetime] = Field(None, description="Last analysis date")
     reputation: Optional[int] = Field(None, description="Resource reputation score")
     permalink: Optional[str] = Field(None, description="VirusTotal permalink")
+    message: Optional[str] = Field(None, description="Status message")
     
     @validator('analysis_date', pre=True)
     def parse_analysis_date(cls, v):

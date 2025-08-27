@@ -118,6 +118,13 @@ class VirusTotalClient:
         await self._create_session()
         
         url = f"{self.BASE_URL}/{endpoint.lstrip('/')}"
+        logger.info(f"Making VirusTotal request: {method} {url}")
+        if json_data:
+            logger.info(f"Request JSON data: {json_data}")
+        if params:
+            logger.info(f"Request params: {params}")
+        if data:
+            logger.info(f"Request data: {data}")
         
         try:
             async with self.session.request(
@@ -152,6 +159,8 @@ class VirusTotalClient:
                         error_code="NOT_FOUND"
                     )
                 else:
+                    logger.error(f"VirusTotal API error - Status: {response.status}")
+                    logger.error(f"VirusTotal API error - Response: {response_data}")
                     error_msg = response_data.get("error", {}).get("message", f"HTTP {response.status}")
                     raise VirusTotalAPIError(
                         error_msg,
@@ -160,6 +169,62 @@ class VirusTotalClient:
                     
         except aiohttp.ClientError as e:
             raise VirusTotalAPIError(f"Network error: {str(e)}")
+    
+    async def _make_request_with_form(
+        self, 
+        method: str, 
+        endpoint: str, 
+        form_data: 'aiohttp.FormData' = None
+    ) -> Dict[str, Any]:
+        """Make HTTP request with FormData to VirusTotal API"""
+        await self._wait_for_rate_limit()
+        await self._create_session()
+        
+        url = f"{self.BASE_URL}/{endpoint.lstrip('/')}"
+        logger.info(f"Making VirusTotal form request: {method} {url}")
+        
+        try:
+            async with self.session.request(
+                method=method,
+                url=url,
+                data=form_data
+            ) as response:
+                response_data = await response.json()
+                
+                if response.status == 200:
+                    return response_data
+                elif response.status == 204:
+                    return {"data": {}}
+                elif response.status == 429:
+                    raise VirusTotalAPIError(
+                        "API rate limit exceeded",
+                        status_code=429,
+                        error_code="RATE_LIMIT_EXCEEDED"
+                    )
+                elif response.status == 401:
+                    raise VirusTotalAPIError(
+                        "Invalid API key",
+                        status_code=401,
+                        error_code="INVALID_API_KEY"
+                    )
+                elif response.status == 404:
+                    raise VirusTotalAPIError(
+                        "Resource not found",
+                        status_code=404,
+                        error_code="NOT_FOUND"
+                    )
+                else:
+                    logger.error(f"VirusTotal API error - Status: {response.status}")
+                    logger.error(f"VirusTotal API error - Response: {response_data}")
+                    error_msg = response_data.get("error", {}).get("message", f"HTTP {response.status}")
+                    raise VirusTotalAPIError(
+                        error_msg,
+                        status_code=response.status
+                    )
+                    
+        except aiohttp.ClientError as e:
+            logger.error(f"VirusTotal client error: {e}")
+            raise VirusTotalAPIError(f"Network error: {e}", status_code=0)
     
     # File Analysis Methods
     async def analyze_file(self, file_path: str) -> Dict[str, Any]:
@@ -191,8 +256,56 @@ class VirusTotalClient:
     # URL Analysis Methods
     async def analyze_url(self, url: str) -> Dict[str, Any]:
         """Submit a URL for analysis"""
-        json_data = {'url': url}
-        return await self._make_request('POST', '/urls', json_data=json_data)
+        # VirusTotal URL endpoint expects form-encoded data, not JSON
+        await self._wait_for_rate_limit()
+        
+        url_endpoint = f"{self.BASE_URL}/urls"
+        form_data = {'url': url}
+        
+        logger.info(f"VirusTotal analyze_url called with: {url}")
+        logger.info(f"Form data being sent: {form_data}")
+        logger.info(f"Making direct form request to: {url_endpoint}")
+        
+        # Create a separate session without JSON content-type for form data
+        headers = {
+            "x-apikey": self.api_key,
+            "accept": "application/json"
+            # No content-type header - let aiohttp set it automatically for form data
+        }
+        
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
+            try:
+                async with session.post(url_endpoint, data=form_data) as response:
+                    response_data = await response.json()
+                    
+                    if response.status == 200:
+                        return response_data
+                    elif response.status == 204:
+                        return {"data": {}}
+                    elif response.status == 429:
+                        raise VirusTotalAPIError(
+                            "API rate limit exceeded",
+                            status_code=429,
+                            error_code="RATE_LIMIT_EXCEEDED"
+                        )
+                    elif response.status == 401:
+                        raise VirusTotalAPIError(
+                            "Invalid API key",
+                            status_code=401,
+                            error_code="INVALID_API_KEY"
+                        )
+                    else:
+                        logger.error(f"VirusTotal API error - Status: {response.status}")
+                        logger.error(f"VirusTotal API error - Response: {response_data}")
+                        error_msg = response_data.get("error", {}).get("message", f"HTTP {response.status}")
+                        raise VirusTotalAPIError(
+                            error_msg,
+                            status_code=response.status
+                        )
+            except aiohttp.ClientError as e:
+                logger.error(f"VirusTotal client error: {e}")
+                raise VirusTotalAPIError(f"Network error: {e}", status_code=0)
     
     async def get_url_analysis(self, url_id: str) -> Dict[str, Any]:
         """Get URL analysis results by URL ID or base64 encoded URL"""

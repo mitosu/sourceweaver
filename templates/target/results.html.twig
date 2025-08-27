@@ -67,6 +67,22 @@
                                 </div>
                             </div>
                         {% endif %}
+                        {% if target.osintTools|length > 0 %}
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <strong>Herramientas OSINT:</strong>
+                                    {% for tool in target.osintTools %}
+                                        <span class="badge bg-primary me-1">
+                                            {% if tool == 'virustotal' %}
+                                                <i class="bi bi-shield-check me-1"></i> VirusTotal
+                                            {% else %}
+                                                {{ tool|title }}
+                                            {% endif %}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -131,8 +147,12 @@
                         {% else %}
                             {% set data = result.data %}
                             
+                            {# Handle VirusTotal results #}
+                            {% if result.source == 'VirusTotal' %}
+                                {% include 'target/partials/_virustotal_results.html.twig' with {data: data, target_type: target.type} %}
+                            
                             {# Handle FastAPI Python results #}
-                            {% if result.source == 'FastAPI-Python' %}
+                            {% elseif result.source == 'FastAPI-Python' %}
                                 {% include 'target/partials/_python_results.html.twig' with {data: data} %}
                             
                             {# Handle legacy simulated results #}

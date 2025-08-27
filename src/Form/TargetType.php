@@ -46,6 +46,19 @@ class TargetType extends AbstractType
                     'placeholder' => 'Información adicional sobre este target'
                 ]
             ])
+            ->add('osintTools', ChoiceType::class, [
+                'label' => 'Herramientas OSINT',
+                'choices' => [
+                    'VirusTotal' => 'virustotal',
+                ],
+                'multiple' => true,
+                'expanded' => true,
+                'required' => false,
+                'help' => 'Selecciona las herramientas OSINT que deseas usar para analizar este target',
+                'attr' => [
+                    'class' => 'osint-tools-checkboxes'
+                ]
+            ])
             ->add('save', SubmitType::class, [
                 'label' => 'Añadir target',
                 'attr' => [

@@ -6,6 +6,7 @@ use App\Entity\AnalysisResult;
 use App\Entity\Target;
 use App\Service\ActivityLogService;
 use App\Service\Analysis\ApiAnalysisService;
+use App\Service\Analysis\OsintToolsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -15,28 +16,90 @@ class AnalysisService
         private EntityManagerInterface $entityManager,
         private LoggerInterface $logger,
         private ActivityLogService $activityLogService,
-        private ?ApiAnalysisService $apiAnalysisService = null
+        private ?ApiAnalysisService $apiAnalysisService = null,
+        private ?OsintToolsService $osintToolsService = null
     ) {}
 
     public function analyzeTarget(Target $target): array
     {
-        // Always use API analysis service for real OSINT analysis
-        if ($this->apiAnalysisService) {
-            $this->logger->info('Starting API analysis for target', [
+        $allResults = [];
+
+        try {
+            // Update target status
+            $target->setStatus('analyzing');
+            $this->entityManager->flush();
+
+            // Log analysis started
+            $this->activityLogService->logAnalysisStarted($target->getInvestigation(), $target);
+
+            // First priority: Use selected OSINT tools
+            if ($this->osintToolsService && !empty($target->getOsintTools())) {
+                $this->logger->info('Starting OSINT tools analysis for target', [
+                    'target_id' => $target->getId(),
+                    'target_type' => $target->getType(),
+                    'target_value' => $target->getValue(),
+                    'osint_tools' => $target->getOsintTools()
+                ]);
+                
+                $osintResults = $this->osintToolsService->analyzeTargetWithOsintTools($target);
+                $allResults = array_merge($allResults, $osintResults);
+            }
+
+            // Second priority: Use general API analysis service if available and no OSINT tools selected
+            if ($this->apiAnalysisService && empty($target->getOsintTools())) {
+                $this->logger->info('Starting general API analysis for target', [
+                    'target_id' => $target->getId(),
+                    'target_type' => $target->getType(),
+                    'target_value' => $target->getValue()
+                ]);
+                
+                $apiResults = $this->apiAnalysisService->analyzeTarget($target);
+                $allResults = array_merge($allResults, $apiResults);
+            }
+
+            // Fallback: Use simulated analysis if no other options
+            if (empty($allResults)) {
+                $this->logger->warning('No analysis services available, using simulated analysis', [
+                    'target_id' => $target->getId()
+                ]);
+                
+                $allResults = $this->performSimulatedAnalysis($target);
+            }
+
+            // Update target status and last analyzed time
+            $target->setStatus('analyzed');
+            $target->setLastAnalyzed(new \DateTimeImmutable());
+            
+            $this->entityManager->flush();
+            
+            // Log analysis completed
+            $this->activityLogService->logAnalysisCompleted($target->getInvestigation(), $target, count($allResults));
+            
+            $this->logger->info('Target analysis completed successfully', [
                 'target_id' => $target->getId(),
                 'target_type' => $target->getType(),
-                'target_value' => $target->getValue()
+                'target_value' => $target->getValue(),
+                'results_count' => count($allResults),
+                'osint_tools_used' => !empty($target->getOsintTools()),
+                'osint_tools' => $target->getOsintTools()
+            ]);
+
+        } catch (\Exception $e) {
+            $target->setStatus('error');
+            $this->entityManager->flush();
+            
+            // Log analysis failed
+            $this->activityLogService->logAnalysisFailed($target->getInvestigation(), $target, $e->getMessage());
+            
+            $this->logger->error('Target analysis failed', [
+                'target_id' => $target->getId(),
+                'error' => $e->getMessage()
             ]);
             
-            return $this->apiAnalysisService->analyzeTarget($target);
+            throw $e;
         }
-        
-        // Fallback only if API service is not available
-        $this->logger->warning('API analysis service not available, using simulated analysis', [
-            'target_id' => $target->getId()
-        ]);
-        
-        return $this->performSimulatedAnalysis($target);
+
+        return $allResults;
     }
     
     private function performSimulatedAnalysis(Target $target): array

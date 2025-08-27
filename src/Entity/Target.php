@@ -34,6 +34,9 @@ class Target
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $lastAnalyzed = null;
 
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $osintTools = null;
+
     #[ORM\ManyToOne(targetEntity: Investigation::class, inversedBy: 'targets')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Investigation $investigation = null;
@@ -45,6 +48,7 @@ class Target
     {
         $this->analysisResults = new ArrayCollection();
         $this->status = 'pending';
+        $this->osintTools = [];
     }
 
     #[ORM\PrePersist]
@@ -120,6 +124,44 @@ class Target
     public function setLastAnalyzed(?\DateTimeImmutable $lastAnalyzed): static
     {
         $this->lastAnalyzed = $lastAnalyzed;
+        return $this;
+    }
+
+    public function getOsintTools(): array
+    {
+        return $this->osintTools ?? [];
+    }
+
+    public function setOsintTools(?array $osintTools): static
+    {
+        $this->osintTools = $osintTools ?? [];
+        return $this;
+    }
+
+    public function hasOsintTool(string $tool): bool
+    {
+        return in_array($tool, $this->osintTools ?? [], true);
+    }
+
+    public function addOsintTool(string $tool): static
+    {
+        if ($this->osintTools === null) {
+            $this->osintTools = [];
+        }
+        if (!$this->hasOsintTool($tool)) {
+            $this->osintTools[] = $tool;
+        }
+        return $this;
+    }
+
+    public function removeOsintTool(string $tool): static
+    {
+        if ($this->osintTools !== null) {
+            $this->osintTools = array_values(array_filter(
+                $this->osintTools, 
+                fn($t) => $t !== $tool
+            ));
+        }
         return $this;
     }
 
