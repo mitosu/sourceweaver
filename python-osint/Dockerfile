@@ -23,6 +23,7 @@ RUN mkdir -p /app/scripts /app/logs /app/api
 # Copy application code
 COPY api/ /app/api/
 COPY scripts/ /app/scripts/
+COPY .env /app/.env
 
 # Make scripts executable
 RUN find /app/scripts -name "*.py" -exec chmod +x {} \;

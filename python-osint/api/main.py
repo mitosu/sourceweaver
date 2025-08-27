@@ -24,6 +24,7 @@ sys.path.insert(0, str(scripts_dir))
 from api.models import AnalysisRequest, AnalysisResponse, HealthResponse, ScriptInfo
 from api.analysis_manager import AnalysisManager
 from api.config import get_settings
+from api.routers import virustotal_router
 
 # Configure logging
 logging.basicConfig(
@@ -57,6 +58,9 @@ app.add_middleware(
 # Initialize analysis manager
 settings = get_settings()
 analysis_manager = AnalysisManager(settings)
+
+# Include routers
+app.include_router(virustotal_router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
