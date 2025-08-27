@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ workspace.name }} - IRONWHISPER{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">{{ workspace.name }}</h1>
+                <p class="text-muted mb-0">Espacio de trabajo colaborativo</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Información del Workspace
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Nombre</h6>
+                                <p class="mb-3">{{ workspace.name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Descripción</h6>
+                                <p class="mb-3">{{ workspace.description ?? 'Sin descripción disponible' }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Creado</h6>
+                                <p class="mb-3">{{ workspace.createdAt|date('d/m/Y H:i') }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Estado</h6>
+                                <span class="badge bg-success">Activo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-gear me-2"></i>
+                            Acciones
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('investigation_index') }}" class="btn btn-primary">
+                                <i class="bi bi-search me-2"></i>
+                                Ver Investigaciones
+                            </a>
+                            <a href="{{ path('dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-house-door me-2"></i>
+                                Volver al Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-people me-2"></i>
+                            Acceso
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-check-circle text-success"></i>
+                            </div>
+                            <div>
+                                <p class="mb-1 fw-medium">Miembro Activo</p>
+                                <small class="text-muted">Tienes acceso completo a este workspace</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
