@@ -3,9 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Workspace;
+use App\Entity\ValueObject\WorkspaceName;
+use App\Factory\WorkspaceFactory;
+use App\Factory\WorkspaceMembershipFactory;
+use App\Form\WorkspaceType;
 use App\Repository\WorkspaceRepository;
 use App\Repository\InvestigationRepository;
 use App\Service\Workspace\GetUserWorkspaces;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,6 +27,9 @@ final class WorkspaceController extends AbstractController
         $user = $this->getUser();
         $workspaces = $getUserWorkspaces($user);
 
+        // Create form for new workspace
+        $form = $this->createForm(WorkspaceType::class);
+
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => $this->generateUrl('dashboard'), 'icon' => 'bi bi-house-door'],
             ['label' => 'Workspaces', 'icon' => 'bi bi-person-workspace']
@@ -29,13 +37,63 @@ final class WorkspaceController extends AbstractController
 
         return $this->render('workspace/index.html.twig', [
             'workspaces' => $workspaces,
+            'form' => $form,
             'breadcrumbs' => $breadcrumbs
         ]);
     }
 
-    #[Route('/{id}', name: 'workspace_show')]
-    public function show(Request $request, Workspace $workspace, GetUserWorkspaces $getUserWorkspaces, InvestigationRepository $investigationRepository): Response
+    #[Route('/new', name: 'workspace_new', methods: ['POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $form = $this->createForm(WorkspaceType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $data = $form->getData();
+                $user = $this->getUser();
+                
+                // Create workspace
+                $workspaceName = new WorkspaceName($data['name']);
+                $workspace = WorkspaceFactory::create($workspaceName, $user);
+                $entityManager->persist($workspace);
+                
+                // Create membership for the owner
+                $membership = WorkspaceMembershipFactory::create($workspace, $user, 'owner');
+                $entityManager->persist($membership);
+                
+                $entityManager->flush();
+                
+                $this->addFlash('success', 'Workspace "' . $workspace->getName() . '" creado exitosamente.');
+                
+                return $this->redirectToRoute('workspace_show', ['id' => $workspace->getId()]);
+                
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Error al crear el workspace: ' . $e->getMessage());
+            }
+        }
+
+        // If form has errors, add them to flash messages
+        if ($form->isSubmitted() && !$form->isValid()) {
+            foreach ($form->getErrors(true) as $error) {
+                $this->addFlash('error', $error->getMessage());
+            }
+        }
+
+        return $this->redirectToRoute('workspace_index');
+    }
+
+    #[Route('/{id}', name: 'workspace_show')]
+    public function show(Request $request, string $id, GetUserWorkspaces $getUserWorkspaces, InvestigationRepository $investigationRepository, EntityManagerInterface $entityManager): Response
+    {
+        // Find workspace manually using the repository
+        $workspaceRepository = $entityManager->getRepository(Workspace::class);
+        $workspace = $workspaceRepository->find($id);
+        
+        if (!$workspace) {
+            throw $this->createNotFoundException('Workspace no encontrado.');
+        }
+        
         $user = $this->getUser();
         $userWorkspaces = $getUserWorkspaces($user);
         

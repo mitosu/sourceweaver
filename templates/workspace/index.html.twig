@@ -10,6 +10,9 @@
                 <h1 class="h3 mb-1">Mis Workspaces</h1>
                 <p class="text-muted mb-0">{{ workspaces|length }} workspace(s) disponible(s)</p>
             </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWorkspaceModal">
+                <i class="bi bi-plus me-1"></i>Nuevo Workspace
+            </button>
         </div>
 
         {% if workspaces is empty %}
@@ -57,4 +60,72 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modal for New Workspace -->
+<div class="modal fade" id="newWorkspaceModal" tabindex="-1" aria-labelledby="newWorkspaceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            {{ form_start(form, {'action': path('workspace_new'), 'method': 'POST', 'attr': {'id': 'newWorkspaceForm'}}) }}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newWorkspaceModalLabel">
+                        <i class="bi bi-plus-circle me-2"></i>Crear Nuevo Workspace
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ form_label(form.name, 'Nombre del Workspace', {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control', 'placeholder': 'Ingresa un nombre para el workspace'}}) }}
+                        <div class="form-text">
+                            El nombre debe tener entre 3 y 255 caracteres.
+                        </div>
+                        {{ form_errors(form.name) }}
+                    </div>
+                    
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <div>
+                            <strong>Información:</strong> Serás el propietario de este workspace y tendrás acceso completo para gestionar investigaciones y miembros.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Crear Workspace
+                    </button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+
+<script>
+// Reset form when modal is closed
+document.getElementById('newWorkspaceModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('newWorkspaceForm').reset();
+});
+
+// Form validation
+document.getElementById('newWorkspaceForm').addEventListener('submit', function(e) {
+    const nameInput = document.getElementById('workspace_name');
+    const name = nameInput.value.trim();
+    
+    if (name.length < 3) {
+        e.preventDefault();
+        alert('El nombre del workspace debe tener al menos 3 caracteres.');
+        nameInput.focus();
+        return;
+    }
+    
+    if (name.length > 255) {
+        e.preventDefault();
+        alert('El nombre del workspace no puede tener más de 255 caracteres.');
+        nameInput.focus();
+        return;
+    }
+});
+</script>
 {% endblock %}

@@ -7,7 +7,7 @@ use Symfony\Component\Uid\Uuid;
 use App\Entity\User;
 use App\Entity\ValueObject\WorkspaceName;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: 'App\Repository\WorkspaceRepository')]
 class Workspace
 {
     #[ORM\Id]

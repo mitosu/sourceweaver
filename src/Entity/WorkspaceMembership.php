@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: 'App\Repository\WorkspaceMembershipRepository')]
 class WorkspaceMembership
 {
     #[ORM\Id]
