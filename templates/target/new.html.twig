@@ -44,7 +44,24 @@
                                         Selecciona las herramientas OSINT que deseas usar para analizar este target. 
                                         Puedes cambiar esta selección más tarde.
                                     </p>
-                                    {{ form_row(form.osintTools, {'label': false}) }}
+                                    <div class="osint-tools-container">
+                                        {% for choice in form.osintTools %}
+                                            <div class="form-check mb-3">
+                                                {{ form_widget(choice, {'attr': {'class': 'form-check-input'}}) }}
+                                                {{ form_label(choice, null, {'label_attr': {'class': 'form-check-label ms-2'}}) }}
+                                                {% if choice.vars.value == 'virustotal' %}
+                                                    <div class="text-muted small mt-1 ms-4">
+                                                        Análisis de archivos, URLs, dominios e IPs para detectar malware
+                                                    </div>
+                                                {% elseif choice.vars.value == 'google_search' %}
+                                                    <div class="text-muted small mt-1 ms-4">
+                                                        Google Dorking para descubrimiento de información y activos
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                        {{ form_errors(form.osintTools) }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -86,6 +103,9 @@
                         
                         <h6><i class="bi bi-telephone me-1"></i>Teléfono</h6>
                         <p class="small text-muted">Números de teléfono</p>
+                        
+                        <h6><i class="bi bi-person-badge me-1"></i>Alias/Usuario</h6>
+                        <p class="small text-muted">Ej: @username, mikes_torres</p>
                     </div>
                 </div>
             </div>
@@ -117,6 +137,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             case 'phone':
                 valueInput.placeholder = 'Ej: +34600123456';
+                break;
+            case 'alias':
+                valueInput.placeholder = 'Ej: @username, mikes_torres, johndoe';
                 break;
             default:
                 valueInput.placeholder = 'Valor del target';

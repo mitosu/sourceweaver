@@ -1,0 +1,200 @@
+{% if result.source == 'Google Search' and result.data.search_results is defined %}
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+        <i class="bi bi-search text-info me-2"></i>
+        <h5 class="card-title mb-0">Google Search - Google Dorking</h5>
+        <span class="badge bg-info ms-auto">{{ result.data.search_results|length }} consultas</span>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <strong>Target:</strong> {{ result.data.target_value }}
+            </div>
+            <div class="col-md-6">
+                <strong>Tipo:</strong> 
+                <span class="badge bg-secondary">{{ result.data.target_type|upper }}</span>
+            </div>
+        </div>
+
+        {% if result.data.search_results %}
+            <div class="accordion" id="googleSearchAccordion{{ result.id }}">
+                {% set loop_outer = loop %}
+                {% for category, search_data in result.data.search_results %}
+                    {% set accordion_id = 'collapse-' ~ result.id ~ '-' ~ loop.index %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ accordion_id }}">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#{{ accordion_id }}" 
+                                    aria-expanded="false" 
+                                    aria-controls="{{ accordion_id }}">
+                                <div class="d-flex align-items-center w-100">
+                                    <i class="bi bi-search me-2"></i>
+                                    <strong>{{ category }}</strong>
+                                    <div class="ms-auto me-3">
+                                        {% if search_data.error is defined %}
+                                            {% if search_data.error_type is defined and search_data.error_type == 'quota_exceeded' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-clock me-1"></i>Límite diario
+                                                </span>
+                                            {% elseif search_data.status is defined and search_data.status == 'fallback_attempted' %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-shield me-1"></i>Método alternativo
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Error</span>
+                                            {% endif %}
+                                        {% elseif search_data.results is defined and search_data.results|length > 0 %}
+                                            <span class="badge bg-success">{{ search_data.results|length }} resultados</span>
+                                            {% if search_data.total_results > 0 %}
+                                                <span class="badge bg-info ms-1">{{ search_data.total_results }} total</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning">Sin resultados</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="{{ accordion_id }}" 
+                             class="accordion-collapse collapse" 
+                             aria-labelledby="heading{{ accordion_id }}" 
+                             data-bs-parent="#googleSearchAccordion{{ result.id }}">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <strong>Query utilizada:</strong>
+                                    <code class="bg-light p-2 rounded d-block mt-1">{{ search_data.query }}</code>
+                                </div>
+
+                                {% if search_data.error is defined %}
+                                    {% if search_data.error_type is defined and search_data.error_type == 'quota_exceeded' %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-clock me-2"></i>
+                                            <div>
+                                                <strong>Límite diario alcanzado</strong>
+                                                <p class="mb-2 mt-2">{{ search_data.message }}</p>
+                                                {% if search_data.next_reset is defined %}
+                                                    <small class="text-muted d-block">
+                                                        <i class="bi bi-arrow-clockwise me-1"></i>{{ search_data.next_reset }}
+                                                    </small>
+                                                {% endif %}
+                                                {% if search_data.alternative is defined %}
+                                                    <small class="text-muted d-block mt-1">
+                                                        <i class="bi bi-lightbulb me-1"></i>{{ search_data.alternative }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% elseif search_data.status is defined and search_data.status == 'fallback_attempted' %}
+                                        <div class="alert alert-secondary">
+                                            <i class="bi bi-shield-exclamation me-2"></i>
+                                            <div>
+                                                <strong>Método alternativo intentado</strong>
+                                                <p class="mb-1 mt-2">{{ search_data.message }}</p>
+                                                {% if search_data.note is defined %}
+                                                    <small class="text-muted">{{ search_data.note }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-danger">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            <strong>Error:</strong> {{ search_data.error }}
+                                        </div>
+                                    {% endif %}
+                                {% elseif search_data.results is defined and search_data.results|length > 0 %}
+                                    <div class="results-list">
+                                        {% for item in search_data.results %}
+                                            <div class="border-bottom pb-3 mb-3">
+                                                <h6 class="mb-2">
+                                                    <a href="{{ item.link }}" target="_blank" rel="noopener" class="text-decoration-none">
+                                                        {{ item.title|raw }}
+                                                        <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.8em;"></i>
+                                                    </a>
+                                                </h6>
+                                                
+                                                {% if item.display_link %}
+                                                    <div class="text-success small mb-2">
+                                                        {{ item.display_link }}
+                                                    </div>
+                                                {% endif %}
+
+                                                {% if item.snippet %}
+                                                    <p class="mb-2 text-muted small">
+                                                        {{ item.snippet|raw }}
+                                                    </p>
+                                                {% endif %}
+
+                                                {% if item.mime is defined or item.file_format is defined %}
+                                                    <div class="small">
+                                                        {% if item.file_format %}
+                                                            <span class="badge bg-secondary me-1">{{ item.file_format|upper }}</span>
+                                                        {% endif %}
+                                                        {% if item.mime %}
+                                                            <span class="badge bg-outline-secondary">{{ item.mime }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {% if search_data.status is defined and search_data.status == 'fallback_attempted' %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            <div>
+                                                <strong>Límite de API de Google excedido</strong>
+                                                <p class="mb-2 mt-2">No se pudieron obtener resultados porque se ha alcanzado el límite diario de la API de Google Custom Search (100 consultas/día).</p>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Esta búsqueda probablemente devolverá resultados en Google.com, pero no podemos acceder a ellos a través de la API en este momento.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    {% elseif search_data.status is defined and search_data.status == 'quota_limited' %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-clock me-2"></i>
+                                            <div>
+                                                <strong>Cuota diaria de Google agotada</strong>
+                                                <p class="mb-2 mt-2">Se ha excedido el límite diario de búsquedas de Google (100/día). El servicio se restablecerá automáticamente mañana.</p>
+                                                <div class="mt-2">
+                                                    <small class="text-muted d-block">
+                                                        <i class="bi bi-arrow-clockwise me-1"></i>Las consultas se reanudarán automáticamente en 24 horas
+                                                    </small>
+                                                    <small class="text-muted d-block mt-1">
+                                                        <i class="bi bi-lightbulb me-1"></i>Para obtener más consultas, considera actualizar a un plan de pago
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            No se encontraron resultados para esta búsqueda específica.
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                No se pudieron realizar búsquedas para este tipo de target.
+            </div>
+        {% endif %}
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Los resultados mostrados corresponden a búsquedas automatizadas (Google Dorking) 
+                    basadas en el documento de GoogleIntegration para obtención de inteligencia.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

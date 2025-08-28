@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     urlvoid_api_key: Optional[str] = Field(None, env="URLVOID_API_KEY")
     urlvoid_identifier: Optional[str] = Field(None, env="URLVOID_IDENTIFIER")
     shodan_api_key: Optional[str] = Field(None, env="SHODAN_API_KEY")
+    google_api_key: Optional[str] = Field(None, env="GOOGLE_API_KEY")
+    google_cse_id: Optional[str] = Field(None, env="GOOGLE_CSE_ID")
     
     # Paths
     scripts_path: str = Field(default="/app/scripts", env="SCRIPTS_PATH")
@@ -56,6 +58,8 @@ class Settings(BaseSettings):
             'urlvoid_api_key': self.urlvoid_api_key,
             'urlvoid_identifier': self.urlvoid_identifier,
             'shodan_api_key': self.shodan_api_key,
+            'google_api_key': self.google_api_key,
+            'google_cse_id': self.google_cse_id,
         }
     
     def get_script_env(self) -> Dict[str, str]:
@@ -73,6 +77,10 @@ class Settings(BaseSettings):
             env['URLVOID_IDENTIFIER'] = self.urlvoid_identifier
         if self.shodan_api_key:
             env['SHODAN_API_KEY'] = self.shodan_api_key
+        if self.google_api_key:
+            env['GOOGLE_API_KEY'] = self.google_api_key
+        if self.google_cse_id:
+            env['GOOGLE_CSE_ID'] = self.google_cse_id
         
         return env
 
@@ -99,5 +107,6 @@ RATE_LIMITS = {
     'virustotal': 4,  # requests per minute (free tier)
     'abuseipdb': 1000,  # requests per day (free tier)
     'urlvoid': 100,  # requests per day (free tier)
-    'shodan': 100  # requests per month (free tier)
+    'shodan': 100,  # requests per month (free tier)
+    'google_search': 100  # requests per day (free tier)
 }

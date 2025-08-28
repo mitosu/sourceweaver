@@ -24,7 +24,8 @@ class TargetType extends AbstractType
                     'Dominio' => 'domain',
                     'Email' => 'email',
                     'Hash (MD5/SHA1/SHA256)' => 'hash',
-                    'Teléfono' => 'phone'
+                    'Teléfono' => 'phone',
+                    'Alias/Usuario' => 'alias'
                 ],
                 'attr' => [
                     'class' => 'form-select'
@@ -34,7 +35,7 @@ class TargetType extends AbstractType
                 'label' => 'Valor',
                 'attr' => [
                     'class' => 'form-control',
-                    'placeholder' => 'Ej: 192.168.1.1, example.com, user@domain.com'
+                    'placeholder' => 'Ej: 192.168.1.1, example.com, user@domain.com, @username'
                 ]
             ])
             ->add('description', TextareaType::class, [
@@ -50,14 +51,12 @@ class TargetType extends AbstractType
                 'label' => 'Herramientas OSINT',
                 'choices' => [
                     'VirusTotal' => 'virustotal',
+                    'Google Search' => 'google_search',
                 ],
                 'multiple' => true,
                 'expanded' => true,
                 'required' => false,
-                'help' => 'Selecciona las herramientas OSINT que deseas usar para analizar este target',
-                'attr' => [
-                    'class' => 'osint-tools-checkboxes'
-                ]
+                'help' => 'Selecciona las herramientas OSINT que deseas usar para analizar este target'
             ])
             ->add('save', SubmitType::class, [
                 'label' => 'Añadir target',

@@ -209,6 +209,7 @@ class Target
             'email' => 'bi-envelope',
             'hash' => 'bi-fingerprint',
             'phone' => 'bi-telephone',
+            'alias' => 'bi-person-badge',
             default => 'bi-question-circle'
         };
     }

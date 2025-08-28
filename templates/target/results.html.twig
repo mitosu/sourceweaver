@@ -75,6 +75,8 @@
                                         <span class="badge bg-primary me-1">
                                             {% if tool == 'virustotal' %}
                                                 <i class="bi bi-shield-check me-1"></i> VirusTotal
+                                            {% elseif tool == 'google_search' %}
+                                                <i class="bi bi-search me-1"></i> Google Search
                                             {% else %}
                                                 {{ tool|title }}
                                             {% endif %}
@@ -150,6 +152,10 @@
                             {# Handle VirusTotal results #}
                             {% if result.source == 'VirusTotal' %}
                                 {% include 'target/partials/_virustotal_results.html.twig' with {data: data, target_type: target.type} %}
+                            
+                            {# Handle Google Search results #}
+                            {% elseif result.source == 'Google Search' %}
+                                {% include 'target/partials/_google_search_results.html.twig' with {result: result} %}
                             
                             {# Handle FastAPI Python results #}
                             {% elseif result.source == 'FastAPI-Python' %}
