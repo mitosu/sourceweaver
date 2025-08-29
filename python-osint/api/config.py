@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     shodan_api_key: Optional[str] = Field(None, env="SHODAN_API_KEY")
     google_api_key: Optional[str] = Field(None, env="GOOGLE_API_KEY")
     google_cse_id: Optional[str] = Field(None, env="GOOGLE_CSE_ID")
+    google_calls_per_day: int = Field(default=100, env="GOOGLE_CALLS_PER_DAY")
+    google_calls_per_minute: int = Field(default=50, env="GOOGLE_CALLS_PER_MINUTE")
     haveibeenpwned_api_key: Optional[str] = Field(None, env="HAVEIBEENPWNED_API_KEY")
     
     # Paths

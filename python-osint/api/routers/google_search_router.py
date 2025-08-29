@@ -41,7 +41,17 @@ async def get_google_search_client():
             detail="Google Custom Search Engine ID not configured"
         )
     
-    client = GoogleSearchClient(settings.google_api_key, settings.google_cse_id)
+    # Create client with enhanced rate limiting
+    # Use configuration values with fallback to conservative defaults
+    calls_per_day = settings.google_calls_per_day
+    calls_per_minute = settings.google_calls_per_minute
+    
+    client = GoogleSearchClient(
+        api_key=settings.google_api_key, 
+        cse_id=settings.google_cse_id,
+        calls_per_day=calls_per_day,
+        calls_per_minute=calls_per_minute
+    )
     try:
         yield client
     finally:
@@ -353,6 +363,17 @@ async def get_cse_info(client: GoogleSearchClient = Depends(get_google_search_cl
     except Exception as e:
         logger.error(f"Failed to get CSE info: {e}")
         raise HTTPException(status_code=500, detail="Failed to get CSE info")
+
+
+@router.get("/rate-limit-status", response_model=Dict[str, Any])
+async def get_rate_limit_status(client: GoogleSearchClient = Depends(get_google_search_client)):
+    """Get current rate limit status"""
+    try:
+        status = client.get_rate_limit_status()
+        return status
+    except Exception as e:
+        logger.error(f"Failed to get rate limit status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get rate limit status")
 
 
 # Raw response endpoints (for advanced users who want full Google API response)

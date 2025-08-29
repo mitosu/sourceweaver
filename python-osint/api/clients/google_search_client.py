@@ -9,6 +9,7 @@ from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -23,30 +24,96 @@ class GoogleSearchAPIError(Exception):
 
 
 class GoogleSearchRateLimit:
-    """Rate limiter for Google Custom Search API"""
-    def __init__(self, calls_per_day: int = 100):
+    """Enhanced rate limiter for Google Custom Search API with timezone awareness and QPM control"""
+    
+    def __init__(self, calls_per_day: int = 100, calls_per_minute: int = 100):
         self.calls_per_day = calls_per_day
+        self.calls_per_minute = calls_per_minute
         self.calls_today = []
+        self.calls_last_minute = []
+        
+        # Google's quota resets at midnight Pacific Time
+        self.google_timezone = pytz.timezone('America/Los_Angeles')
     
     async def wait_if_needed(self):
-        """Wait if rate limit would be exceeded"""
-        now = datetime.now()
-        today = now.date()
+        """Wait if rate limit would be exceeded (daily or per-minute)"""
+        # Get current time in Google's timezone (Pacific Time)
+        now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        now_pacific = now_utc.astimezone(self.google_timezone)
+        today_pacific = now_pacific.date()
         
-        # Remove calls from previous days
+        # Clean up old daily calls (remove calls from previous days in Pacific timezone)
         self.calls_today = [call_time for call_time in self.calls_today 
-                           if call_time.date() == today]
+                           if call_time.astimezone(self.google_timezone).date() == today_pacific]
         
-        if len(self.calls_today) >= self.calls_per_day:
-            # Calculate wait time until tomorrow
-            tomorrow = datetime.combine(today + timedelta(days=1), datetime.min.time())
-            wait_seconds = (tomorrow - now).total_seconds()
+        # Clean up old per-minute calls (remove calls older than 60 seconds)
+        minute_ago = now_utc - timedelta(minutes=1)
+        self.calls_last_minute = [call_time for call_time in self.calls_last_minute 
+                                 if call_time > minute_ago]
+        
+        # Check per-minute limit first
+        if len(self.calls_last_minute) >= self.calls_per_minute:
+            # Wait until the oldest call in the last minute expires
+            oldest_call = min(self.calls_last_minute)
+            wait_until = oldest_call + timedelta(minutes=1)
+            wait_seconds = (wait_until - now_utc).total_seconds()
             
-            logger.warning(f"Rate limit reached. Waiting {wait_seconds:.0f} seconds until tomorrow")
+            if wait_seconds > 0:
+                logger.warning(f"Per-minute rate limit reached ({self.calls_per_minute}/min). Waiting {wait_seconds:.1f} seconds")
+                await asyncio.sleep(wait_seconds)
+                # Clean up expired calls after waiting
+                self.calls_last_minute = [call_time for call_time in self.calls_last_minute 
+                                         if call_time > now_utc - timedelta(minutes=1)]
+        
+        # Check daily limit
+        if len(self.calls_today) >= self.calls_per_day:
+            # Calculate wait time until midnight Pacific Time
+            tomorrow_pacific = now_pacific.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+            wait_until_utc = tomorrow_pacific.astimezone(pytz.UTC)
+            wait_seconds = (wait_until_utc - now_utc).total_seconds()
+            
+            logger.warning(f"Daily rate limit reached ({self.calls_per_day}/day). Waiting {wait_seconds:.0f} seconds until midnight PT")
             await asyncio.sleep(wait_seconds)
             self.calls_today = []
+            self.calls_last_minute = []
         
-        self.calls_today.append(now)
+        # Record the call
+        current_time_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        self.calls_today.append(current_time_utc)
+        self.calls_last_minute.append(current_time_utc)
+        
+        # Small delay between requests to be respectful
+        await asyncio.sleep(0.1)
+    
+    def get_rate_limit_status(self) -> Dict[str, Any]:
+        """Get current rate limit status"""
+        now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        now_pacific = now_utc.astimezone(self.google_timezone)
+        today_pacific = now_pacific.date()
+        
+        # Clean up old calls for accurate count
+        self.calls_today = [call_time for call_time in self.calls_today 
+                           if call_time.astimezone(self.google_timezone).date() == today_pacific]
+        
+        minute_ago = now_utc - timedelta(minutes=1)
+        self.calls_last_minute = [call_time for call_time in self.calls_last_minute 
+                                 if call_time > minute_ago]
+        
+        # Calculate time until quota reset
+        tomorrow_pacific = now_pacific.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        seconds_until_reset = (tomorrow_pacific.astimezone(pytz.UTC) - now_utc).total_seconds()
+        
+        return {
+            'calls_today': len(self.calls_today),
+            'calls_per_day_limit': self.calls_per_day,
+            'calls_remaining_today': max(0, self.calls_per_day - len(self.calls_today)),
+            'calls_last_minute': len(self.calls_last_minute),
+            'calls_per_minute_limit': self.calls_per_minute,
+            'calls_remaining_this_minute': max(0, self.calls_per_minute - len(self.calls_last_minute)),
+            'quota_reset_in_seconds': int(seconds_until_reset),
+            'quota_reset_time_pt': tomorrow_pacific.strftime('%Y-%m-%d %H:%M:%S %Z'),
+            'current_time_pt': now_pacific.strftime('%Y-%m-%d %H:%M:%S %Z')
+        }
 
 
 class GoogleSearchClient:
@@ -57,7 +124,8 @@ class GoogleSearchClient:
     Requires a Google API key and Custom Search Engine ID.
     """
     
-    def __init__(self, api_key: str, cse_id: str, rate_limit: GoogleSearchRateLimit = None):
+    def __init__(self, api_key: str, cse_id: str, rate_limit: GoogleSearchRateLimit = None, 
+                 calls_per_day: int = 100, calls_per_minute: int = 100):
         """
         Initialize Google Search client
         
@@ -65,10 +133,15 @@ class GoogleSearchClient:
             api_key: Google API key
             cse_id: Custom Search Engine ID
             rate_limit: Rate limiter instance (optional)
+            calls_per_day: Maximum calls per day (default: 100 for free tier)
+            calls_per_minute: Maximum calls per minute (default: 100 for most plans)
         """
         self.api_key = api_key
         self.cse_id = cse_id
-        self.rate_limit = rate_limit or GoogleSearchRateLimit()
+        self.rate_limit = rate_limit or GoogleSearchRateLimit(
+            calls_per_day=calls_per_day,
+            calls_per_minute=calls_per_minute
+        )
         self._service = None
     
     def _get_service(self):
@@ -175,12 +248,29 @@ class GoogleSearchClient:
             error_details = e.error_details[0] if e.error_details else {}
             error_message = error_details.get('message', str(e))
             
-            logger.error(f"Google Search API error: {error_message}")
-            raise GoogleSearchAPIError(
-                message=error_message,
-                status_code=e.resp.status,
-                response=error_details
-            )
+            # Enhanced error handling for quota issues
+            if e.resp.status == 429 or 'quota' in error_message.lower():
+                # Google quota exceeded
+                logger.error(f"Google Search API quota exceeded: {error_message}")
+                raise GoogleSearchAPIError(
+                    message=f"Google API quota exceeded. {error_message}",
+                    status_code=e.resp.status,
+                    response=error_details
+                )
+            elif 'daily limit' in error_message.lower():
+                logger.error(f"Google Search API daily limit reached: {error_message}")
+                raise GoogleSearchAPIError(
+                    message=f"Google API daily limit reached. {error_message}",
+                    status_code=e.resp.status,
+                    response=error_details
+                )
+            else:
+                logger.error(f"Google Search API error: {error_message}")
+                raise GoogleSearchAPIError(
+                    message=error_message,
+                    status_code=e.resp.status,
+                    response=error_details
+                )
         except Exception as e:
             logger.error(f"Unexpected error during Google search: {e}")
             raise GoogleSearchAPIError(f"Search failed: {e}")
@@ -286,3 +376,7 @@ class GoogleSearchClient:
         except Exception as e:
             logger.error(f"Failed to get search info: {e}")
             raise GoogleSearchAPIError(f"Failed to get search info: {e}")
+    
+    def get_rate_limit_status(self) -> Dict[str, Any]:
+        """Get current rate limit status"""
+        return self.rate_limit.get_rate_limit_status()
