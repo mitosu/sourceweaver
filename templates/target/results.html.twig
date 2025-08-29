@@ -77,10 +77,14 @@
                                                 <i class="bi bi-shield-check me-1"></i> VirusTotal
                                             {% elseif tool == 'google_search' %}
                                                 <i class="bi bi-search me-1"></i> Google Search
+                                            {% elseif tool == 'alias_search' %}
+                                                <i class="bi bi-person-badge me-1"></i> Alias/Social Media Search
+                                            {% elseif tool == 'dorking_search' %}
+                                                <i class="bi bi-binoculars me-1"></i> Advanced Dorking
                                             {% elseif tool == 'haveibeenpwned' %}
                                                 <i class="bi bi-person-exclamation me-1"></i> HaveIBeenPwned
                                             {% else %}
-                                                {{ tool|title }}
+                                                {{ tool|replace({'_': ' '})|title }}
                                             {% endif %}
                                         </span>
                                     {% endfor %}
@@ -132,11 +136,76 @@
                 </form>
             </div>
         {% else %}
+            {# Results Navigation/Overview Section for Multiple OSINT Tools #}
+            {% if results|length > 1 %}
+                <div class="card mb-4 border-info">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-list-check me-2"></i>Resumen de Análisis - {{ results|length }} Herramientas OSINT
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for result in results %}
+                                <div class="col-md-6 col-lg-4 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            {% if result.source == 'VirusTotal' %}
+                                                <i class="bi bi-shield-check text-primary"></i>
+                                            {% elseif result.source == 'Google Search' %}
+                                                <i class="bi bi-search text-primary"></i>
+                                            {% elseif result.source == 'Alias Search' %}
+                                                <i class="bi bi-person-badge text-primary"></i>
+                                            {% elseif result.source == 'Advanced Dorking' %}
+                                                <i class="bi bi-binoculars text-primary"></i>
+                                            {% elseif result.source == 'HaveIBeenPwned' %}
+                                                <i class="bi bi-person-exclamation text-primary"></i>
+                                            {% else %}
+                                                <i class="bi bi-gear text-primary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <strong>{{ result.source }}</strong>
+                                            <div>
+                                                <span class="badge {{ result.statusBadgeClass }} badge-sm">
+                                                    {{ result.status|title }}
+                                                </span>
+                                                <small class="text-muted ms-2">
+                                                    {{ result.analyzedAt|date('H:i') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <a href="#result-{{ loop.index }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye me-1"></i>Ver
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {# Individual Results Section #}
             {% for result in results %}
-                <div class="card mb-4">
+                <div class="card mb-4" id="result-{{ loop.index }}">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="card-title mb-0">
-                            <i class="bi bi-gear me-1"></i>{{ result.source|title }}
+                            {% if result.source == 'VirusTotal' %}
+                                <i class="bi bi-shield-check me-1"></i>{{ result.source }}
+                            {% elseif result.source == 'Google Search' %}
+                                <i class="bi bi-search me-1"></i>{{ result.source }}
+                            {% elseif result.source == 'Alias Search' %}
+                                <i class="bi bi-person-badge me-1"></i>{{ result.source }}
+                            {% elseif result.source == 'Advanced Dorking' %}
+                                <i class="bi bi-binoculars me-1"></i>{{ result.source }}
+                            {% elseif result.source == 'HaveIBeenPwned' %}
+                                <i class="bi bi-person-exclamation me-1"></i>{{ result.source }}
+                            {% else %}
+                                <i class="bi bi-gear me-1"></i>{{ result.source|title }}
+                            {% endif %}
                         </h6>
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge {{ result.statusBadgeClass }}">{{ result.status|title }}</span>
@@ -158,6 +227,14 @@
                             {# Handle Google Search results #}
                             {% elseif result.source == 'Google Search' %}
                                 {% include 'target/partials/_google_search_results.html.twig' with {result: result} %}
+                            
+                            {# Handle Alias Search results #}
+                            {% elseif result.source == 'Alias Search' %}
+                                {% include 'target/partials/_alias_search_results.html.twig' with {data: data, target_type: target.type} %}
+                            
+                            {# Handle Advanced Dorking results #}
+                            {% elseif result.source == 'Advanced Dorking' %}
+                                {% include 'target/partials/_dorking_search_results.html.twig' with {data: data, target_type: target.type} %}
                             
                             {# Handle HaveIBeenPwned results #}
                             {% elseif result.source == 'HaveIBeenPwned' %}

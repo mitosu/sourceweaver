@@ -50,14 +50,19 @@ class TargetType extends AbstractType
             ->add('osintTools', ChoiceType::class, [
                 'label' => 'Herramientas OSINT',
                 'choices' => [
-                    'VirusTotal' => 'virustotal',
-                    'Google Search' => 'google_search',
-                    'HaveIBeenPwned' => 'haveibeenpwned',
+                    'VirusTotal - Análisis de malware y amenazas' => 'virustotal',
+                    'Google Search - Dorking básico' => 'google_search',
+                    'Alias/Social Media Search - Búsqueda en redes sociales' => 'alias_search',
+                    'Advanced Dorking - Búsquedas avanzadas especializadas' => 'dorking_search',
+                    'HaveIBeenPwned - Verificación de brechas de seguridad' => 'haveibeenpwned',
                 ],
                 'multiple' => true,
                 'expanded' => true,
                 'required' => false,
-                'help' => 'Selecciona las herramientas OSINT que deseas usar para analizar este target'
+                'help' => 'Selecciona las herramientas OSINT que deseas usar. Puedes seleccionar múltiples herramientas para un análisis más completo.',
+                'attr' => [
+                    'class' => 'osint-tools-checkboxes'
+                ]
             ])
             ->add('save', SubmitType::class, [
                 'label' => 'Añadir target',

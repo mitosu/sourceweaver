@@ -1,0 +1,221 @@
+{# Advanced Dorking Search Results Partial Template #}
+{% set searchResults = data.search_results ?? {} %}
+{% set targetType = data.target_type ?? 'unknown' %}
+{% set targetValue = data.target_value ?? 'N/A' %}
+{% set executionTime = data.execution_time ?? 0 %}
+
+<div class="dorking-search-results">
+    {# Search Summary #}
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h6><i class="bi bi-binoculars me-2"></i>Análisis de Google Dorking Avanzado</h6>
+            <p class="mb-2">
+                <strong>Target:</strong> <code>{{ targetValue }}</code> 
+                <span class="badge bg-info ms-2">{{ targetType|upper }}</span>
+            </p>
+            <div class="d-flex">
+                <span class="me-3">
+                    <strong>Queries ejecutadas:</strong> {{ searchResults|length }}
+                </span>
+                <span>
+                    <strong>Tiempo de ejecución:</strong> {{ "%.2f"|format(executionTime) }}s
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            {% set totalResults = 0 %}
+            {% for category, queryData in searchResults %}
+                {% set totalResults = totalResults + (queryData.total_results ?? 0) %}
+            {% endfor %}
+            <div class="alert alert-info mb-0">
+                <strong>{{ totalResults }}</strong><br>
+                <small>Resultados totales</small>
+            </div>
+        </div>
+    </div>
+
+    {# Search Results by Category #}
+    {% if searchResults|length > 0 %}
+        <div class="accordion" id="dorkingSearchAccordion">
+            {% for category, queryData in searchResults %}
+                {% set loopIndex = loop.index %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="dorkingHeading{{ loopIndex }}">
+                        <button class="accordion-button {% if queryData.total_results == 0 %}collapsed{% endif %}" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#dorkingCollapse{{ loopIndex }}" 
+                                {% if queryData.total_results == 0 %}aria-expanded="false"{% else %}aria-expanded="true"{% endif %}
+                                aria-controls="dorkingCollapse{{ loopIndex }}">
+                            <div class="d-flex align-items-center w-100">
+                                <div class="flex-grow-1">
+                                    <strong>{{ category }}</strong>
+                                    {% if queryData.error_type ?? false %}
+                                        <span class="badge bg-danger ms-2">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>{{ queryData.error_type|title }}
+                                        </span>
+                                    {% elseif queryData.total_results > 0 %}
+                                        <span class="badge bg-success ms-2">
+                                            <i class="bi bi-check-circle me-1"></i>{{ queryData.total_results }} resultados
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-2">
+                                            <i class="bi bi-dash-circle me-1"></i>Sin resultados
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    {% if queryData.search_method ?? false %}
+                                        <small class="text-muted d-block">{{ queryData.search_method }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="dorkingCollapse{{ loopIndex }}" 
+                         class="accordion-collapse collapse {% if queryData.total_results > 0 %}show{% endif %}" 
+                         aria-labelledby="dorkingHeading{{ loopIndex }}" 
+                         data-bs-parent="#dorkingSearchAccordion">
+                        <div class="accordion-body">
+                            {# Query Information #}
+                            <div class="mb-3">
+                                <p class="mb-1"><strong>Google Dork utilizado:</strong></p>
+                                <code class="d-block bg-light p-2 rounded border">{{ queryData.query }}</code>
+                            </div>
+
+                            {# Error Handling #}
+                            {% if queryData.error %}
+                                <div class="alert alert-danger">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>Error en la Búsqueda
+                                    </h6>
+                                    <p class="mb-1"><strong>Error:</strong> {{ queryData.error }}</p>
+                                    {% if queryData.note %}
+                                        <p class="mb-0"><strong>Nota:</strong> {{ queryData.note }}</p>
+                                    {% endif %}
+                                </div>
+                                
+                            {# Fallback Results #}
+                            {% elseif queryData.search_method == 'curl_fallback' %}
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-info-circle me-2"></i>Método de Respaldo Utilizado
+                                    </h6>
+                                    <p class="mb-1">{{ queryData.message ?? 'Se utilizó un método de búsqueda alternativo.' }}</p>
+                                    {% if queryData.note %}
+                                        <p class="mb-0"><em>{{ queryData.note }}</em></p>
+                                    {% endif %}
+                                </div>
+                                
+                            {# Regular Results #}
+                            {% elseif queryData.results|length > 0 %}
+                                <h6 class="mb-3">Resultados encontrados:</h6>
+                                {% for result in queryData.results %}
+                                    <div class="card mb-3 border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <a href="{{ result.link }}" target="_blank" class="text-decoration-none">
+                                                    {{ result.title }}
+                                                    <i class="bi bi-box-arrow-up-right ms-2 text-muted small"></i>
+                                                </a>
+                                            </h6>
+                                            {% if result.snippet %}
+                                                <p class="card-text">{{ result.snippet }}</p>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-success">
+                                                    <i class="bi bi-link me-1"></i>{{ result.display_link }}
+                                                </small>
+                                                {% if result.formatted_url != result.link %}
+                                                    <small class="text-muted">{{ result.formatted_url }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                
+                            {# No Results #}
+                            {% else %}
+                                <div class="text-center py-3">
+                                    <i class="bi bi-search text-muted" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2 text-muted">No se encontraron resultados</h6>
+                                    <p class="text-muted mb-0">
+                                        Esta query de Google Dorking no devolvió resultados. 
+                                        Esto puede indicar que no hay exposición de información en esta categoría.
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {# Summary Statistics #}
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card border-info">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-search text-info" style="font-size: 1.5rem;"></i>
+                        <h5 class="mt-2 mb-0">{{ searchResults|length }}</h5>
+                        <small class="text-muted">Categorías analizadas</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-success">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
+                        {% set categoriesWithResults = 0 %}
+                        {% for category, queryData in searchResults %}
+                            {% if queryData.total_results > 0 %}
+                                {% set categoriesWithResults = categoriesWithResults + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        <h5 class="mt-2 mb-0">{{ categoriesWithResults }}</h5>
+                        <small class="text-muted">Con resultados</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-file-earmark-text text-primary" style="font-size: 1.5rem;"></i>
+                        {% set totalResults = 0 %}
+                        {% for category, queryData in searchResults %}
+                            {% set totalResults = totalResults + (queryData.total_results ?? 0) %}
+                        {% endfor %}
+                        <h5 class="mt-2 mb-0">{{ totalResults }}</h5>
+                        <small class="text-muted">Resultados totales</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <div class="alert alert-warning">
+            <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>Sin Datos de Dorking
+            </h6>
+            <p class="mb-0">No se encontraron datos de búsquedas de Google Dorking para mostrar.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.dorking-search-results .accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+}
+
+.dorking-search-results .card-title a {
+    color: #0d6efd;
+}
+
+.dorking-search-results .card-title a:hover {
+    color: #0a58ca;
+}
+
+.dorking-search-results .border-start {
+    border-left-width: 4px !important;
+}
+</style>

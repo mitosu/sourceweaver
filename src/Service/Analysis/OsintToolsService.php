@@ -74,6 +74,8 @@ class OsintToolsService
             'virustotal' => $this->analyzeWithVirusTotal($target),
             'google_search' => $this->analyzeWithGoogleSearch($target),
             'haveibeenpwned' => $this->analyzeWithHaveIBeenPwned($target),
+            'alias_search' => $this->analyzeWithAliasSearch($target),
+            'dorking_search' => $this->analyzeWithDorkingSearch($target),
             default => null
         };
     }
@@ -203,8 +205,20 @@ class OsintToolsService
             'google_search' => [
                 'name' => 'Google Search',
                 'description' => 'Google Dorking para descubrimiento de información y exposición de activos',
-                'supported_types' => ['domain', 'email', 'url', 'alias'],
+                'supported_types' => ['domain', 'email', 'url'],
                 'icon' => 'bi-search'
+            ],
+            'alias_search' => [
+                'name' => 'Alias/Social Media Search',
+                'description' => 'Búsqueda especializada de usernames y alias en redes sociales (16+ plataformas)',
+                'supported_types' => ['alias'],
+                'icon' => 'bi-person-badge'
+            ],
+            'dorking_search' => [
+                'name' => 'Advanced Dorking',
+                'description' => 'Búsquedas avanzadas de Google Dorking con patrones especializados',
+                'supported_types' => ['domain', 'email', 'url', 'alias'],
+                'icon' => 'bi-binoculars'
             ],
             'haveibeenpwned' => [
                 'name' => 'HaveIBeenPwned',
@@ -220,6 +234,8 @@ class OsintToolsService
         return match ($tool) {
             'virustotal' => $this->testVirusTotalConnection(),
             'google_search' => $this->testGoogleSearchConnection(),
+            'alias_search' => $this->testAliasSearchConnection(),
+            'dorking_search' => $this->testDorkingSearchConnection(),
             'haveibeenpwned' => $this->testHaveIBeenPwnedConnection(),
             default => false
         };
@@ -764,6 +780,177 @@ class OsintToolsService
 
         } catch (\Exception $e) {
             $this->logger->error('HaveIBeenPwned connection test failed', [
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    private function analyzeWithAliasSearch(Target $target): ?AnalysisResult
+    {
+        $targetType = $target->getType();
+        $targetValue = $target->getValue();
+
+        // Alias search is specifically designed for alias/username targets
+        if ($targetType !== 'alias') {
+            $this->logger->warning('Alias Search does not support target type', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue
+            ]);
+            return null;
+        }
+
+        try {
+            $url = self::PYTHON_API_BASE_URL . '/alias-search/search';
+            
+            $this->logger->info('Calling Alias Search API via Python service', [
+                'url' => $url,
+                'target_type' => $targetType,
+                'target_value' => $targetValue
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'timeout' => 120, // Alias search can take longer due to multiple platform searches
+                'headers' => [
+                    'Accept' => 'application/json'
+                ],
+                'query' => [
+                    'username' => $targetValue,
+                    'priority' => 'high', // Default to high priority platforms
+                    'max_results' => 5,
+                    'include_variations' => true
+                ]
+            ]);
+
+            $data = $response->toArray();
+
+            $this->logger->info('Alias Search analysis completed', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
+                'platforms_searched' => $data['summary']['total_platforms_searched'] ?? 0,
+                'platforms_with_results' => count($data['summary']['platforms_with_results'] ?? [])
+            ]);
+
+            $result = new AnalysisResult();
+            $result->setTarget($target);
+            $result->setSource('Alias Search');
+            $result->setData($data);
+            $result->setStatus('success');
+
+            $this->entityManager->persist($result);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Alias Search API call failed', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    private function analyzeWithDorkingSearch(Target $target): ?AnalysisResult
+    {
+        $targetType = $target->getType();
+        $targetValue = $target->getValue();
+
+        try {
+            // Use the specialized dorking endpoint based on target type
+            $endpoint = match ($targetType) {
+                'domain' => "/dorking/analyze-domain/{$targetValue}",
+                'email' => "/dorking/analyze-email/{$targetValue}",
+                'alias' => "/dorking/analyze-alias/{$targetValue}",
+                'url' => "/dorking/analyze-url/" . urlencode($targetValue),
+                default => null
+            };
+
+            if (!$endpoint) {
+                $this->logger->warning('Dorking Search does not support target type', [
+                    'target_type' => $targetType,
+                    'target_value' => $targetValue
+                ]);
+                return null;
+            }
+
+            $url = self::PYTHON_API_BASE_URL . $endpoint;
+            
+            $this->logger->info('Calling Dorking Search API via Python service', [
+                'url' => $url,
+                'target_type' => $targetType,
+                'target_value' => $targetValue
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'timeout' => 90,
+                'headers' => [
+                    'Accept' => 'application/json'
+                ],
+                'query' => [
+                    'priority' => 'high',
+                    'max_results_per_query' => 5
+                ]
+            ]);
+
+            $data = $response->toArray();
+
+            $this->logger->info('Dorking Search analysis completed', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
+                'queries_performed' => count($data['search_results'] ?? [])
+            ]);
+
+            $result = new AnalysisResult();
+            $result->setTarget($target);
+            $result->setSource('Advanced Dorking');
+            $result->setData($data);
+            $result->setStatus('success');
+
+            $this->entityManager->persist($result);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Dorking Search API call failed', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    private function testAliasSearchConnection(): bool
+    {
+        try {
+            $response = $this->httpClient->request('GET', self::PYTHON_API_BASE_URL . '/alias-search/health', [
+                'timeout' => 10
+            ]);
+
+            $data = $response->toArray();
+            return $data['status'] === 'healthy';
+
+        } catch (\Exception $e) {
+            $this->logger->error('Alias Search connection test failed', [
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    private function testDorkingSearchConnection(): bool
+    {
+        try {
+            $response = $this->httpClient->request('GET', self::PYTHON_API_BASE_URL . '/dorking/health', [
+                'timeout' => 10
+            ]);
+
+            $data = $response->toArray();
+            return $data['status'] === 'healthy';
+
+        } catch (\Exception $e) {
+            $this->logger->error('Dorking Search connection test failed', [
                 'error' => $e->getMessage()
             ]);
             return false;

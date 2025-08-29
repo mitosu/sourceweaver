@@ -1,0 +1,206 @@
+{# Alias Search Results Partial Template #}
+{% set summary = data.summary ?? {} %}
+{% set platformResults = data.platform_results ?? {} %}
+{% set recommendations = data.recommendations ?? [] %}
+
+<div class="alias-search-results">
+    {# Search Summary #}
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h6><i class="bi bi-person-badge me-2"></i>Resumen de Búsqueda</h6>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Username buscado:</span>
+                <strong><code>{{ summary.username ?? 'N/A' }}</code></strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Plataformas analizadas:</span>
+                <strong>{{ summary.total_platforms_searched ?? 0 }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Búsquedas exitosas:</span>
+                <strong class="text-success">{{ summary.successful_searches ?? 0 }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Búsquedas fallidas:</span>
+                <strong class="text-danger">{{ summary.failed_searches ?? 0 }}</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h6><i class="bi bi-bar-chart me-2"></i>Estadísticas de Resultados</h6>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Total resultados encontrados:</span>
+                <strong>{{ summary.total_results_found ?? 0 }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Plataformas con resultados:</span>
+                <strong class="text-info">{{ (summary.platforms_with_results ?? [])|length }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Tiempo de búsqueda:</span>
+                <strong>{{ "%.2f"|format(summary.search_duration ?? 0) }}s</strong>
+            </div>
+        </div>
+    </div>
+
+    {# Platforms with Results Summary #}
+    {% if (summary.platforms_with_results ?? [])|length > 0 %}
+        <div class="alert alert-success">
+            <h6 class="alert-heading"><i class="bi bi-check-circle me-2"></i>Presencia Digital Detectada</h6>
+            <p class="mb-2">Se encontraron resultados en las siguientes plataformas:</p>
+            {% for platform in summary.platforms_with_results %}
+                <span class="badge bg-success me-1">
+                    {{ platform|replace({'_': ' '})|title }}
+                </span>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <h6 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Sin Resultados Directos</h6>
+            <p class="mb-0">No se encontraron resultados directos en las plataformas analizadas. Considera ampliar la búsqueda o verificar manualmente.</p>
+        </div>
+    {% endif %}
+
+    {# Detailed Platform Results #}
+    {% if (platformResults ?? {})|length > 0 %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-list-ul me-2"></i>Resultados Detallados por Plataforma
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="aliasSearchAccordion">
+                    {% for platformKey, platformResult in platformResults %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button {% if (platformResult.total_results ?? 0) == 0 and not (loop.index == 1 and (summary.total_results_found ?? 0) == 0) %}collapsed{% endif %}" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ loop.index }}" 
+                                        {% if (platformResult.total_results ?? 0) == 0 and not (loop.index == 1 and (summary.total_results_found ?? 0) == 0) %}aria-expanded="false"{% else %}aria-expanded="true"{% endif %}
+                                        aria-controls="collapse{{ loop.index }}">
+                                    <div class="d-flex align-items-center w-100">
+                                        <div class="flex-grow-1">
+                                            <strong>{{ platformKey|replace({'_': ' '})|title }}</strong>
+                                            {% if platformResult.error %}
+                                                <span class="badge bg-danger ms-2">Error</span>
+                                            {% elseif (platformResult.total_results ?? 0) > 0 %}
+                                                <span class="badge bg-success ms-2">{{ platformResult.total_results }} resultados</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary ms-2">Sin resultados</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted me-3">
+                                            {{ "%.2f"|format(platformResult.search_time ?? 0) }}s
+                                        </small>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" 
+                                 class="accordion-collapse collapse {% if (platformResult.total_results ?? 0) > 0 or (loop.index == 1 and (summary.total_results_found ?? 0) == 0) %}show{% endif %}" 
+                                 aria-labelledby="heading{{ loop.index }}" 
+                                 data-bs-parent="#aliasSearchAccordion">
+                                <div class="accordion-body">
+                                    {% if platformResult.error %}
+                                        <div class="alert alert-danger">
+                                            <strong>Error en la búsqueda:</strong> {{ platformResult.error }}
+                                        </div>
+                                        <p class="mb-1"><strong>Query utilizada:</strong></p>
+                                        <code class="d-block bg-light p-2 rounded">{{ platformResult.query_used ?? 'N/A' }}</code>
+                                    {% elseif (platformResult.results ?? [])|length > 0 %}
+                                        <p class="mb-2"><strong>Query utilizada:</strong></p>
+                                        <code class="d-block bg-light p-2 rounded mb-3">{{ platformResult.query_used ?? 'N/A' }}</code>
+                                        
+                                        <h6>Resultados encontrados:</h6>
+                                        {% for result in platformResult.results %}
+                                            <div class="card mb-2">
+                                                <div class="card-body py-2">
+                                                    <h6 class="card-title mb-1">
+                                                        <a href="{{ result.link ?? '#' }}" target="_blank" class="text-decoration-none">
+                                                            {{ (result.title ?? 'Sin título')|slice(0, 80) }}{% if (result.title ?? '')|length > 80 %}...{% endif %}
+                                                            <i class="bi bi-box-arrow-up-right ms-1 small"></i>
+                                                        </a>
+                                                    </h6>
+                                                    {% if result.snippet %}
+                                                        {% if result.snippet %}
+                                                            <p class="card-text small text-muted mb-1">
+                                                                {{ (result.snippet ?? '')|slice(0, 150) }}{% if (result.snippet ?? '')|length > 150 %}...{% endif %}
+                                                            </p>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                    <small class="text-success">{{ result.display_link ?? result.link ?? 'N/A' }}</small>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted">
+                                            <p class="mb-1"><i class="bi bi-info-circle me-2"></i>No se encontraron resultados en esta plataforma.</p>
+                                            <p class="mb-1"><strong>Query utilizada:</strong></p>
+                                            <code class="d-block bg-light p-2 rounded">{{ platformResult.query_used ?? 'N/A' }}</code>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Recommendations Section #}
+    {% if (recommendations ?? [])|length > 0 %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb me-2"></i>Recomendaciones de Investigación
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    {% for recommendation in recommendations %}
+                        <li class="mb-1">{{ recommendation }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Quick Stats Cards #}
+    {% if (summary.platforms_with_results ?? [])|length > 0 %}
+        <div class="row mt-3">
+            {% for platform in summary.platforms_with_results %}
+                {% set platformResult = platformResults[platform] ?? null %}
+                {% if platformResult %}
+                    <div class="col-md-4 mb-2">
+                        <div class="card border-success">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ platform|replace({'_': ' '})|title }}</h6>
+                                        <small class="text-success">{{ platformResult.total_results ?? 0 }} resultados</small>
+                                    </div>
+                                    <i class="bi bi-check-circle text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.alias-search-results .accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+}
+
+.alias-search-results .card-title a {
+    color: #0d6efd;
+}
+
+.alias-search-results .card-title a:hover {
+    color: #0a58ca;
+}
+</style>
