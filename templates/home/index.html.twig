@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SourceWeaver - Inteligencia OSINT Unificada</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --sw-primary: #1e3a8a;
+            --sw-secondary: #3b82f6;
+            --sw-accent: #06b6d4;
+            --sw-dark: #1e293b;
+            --sw-light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--sw-primary) 0%, var(--sw-secondary) 50%, var(--sw-accent) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .brand-logo {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-bottom: 1rem;
+        }
+        
+        .weave-animation {
+            display: inline-block;
+            animation: weave 3s ease-in-out infinite;
+        }
+        
+        @keyframes weave {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--sw-secondary), var(--sw-accent));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 1.8rem;
+        }
+        
+        .stats-section {
+            background: var(--sw-dark);
+            color: white;
+            padding: 4rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--sw-accent);
+            margin-bottom: 0.5rem;
+        }
+        
+        .cta-section {
+            background: var(--sw-light);
+            padding: 5rem 0;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--sw-secondary), var(--sw-accent));
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(59, 130, 246, 0.4);
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .tech-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tech-item i {
+            font-size: 2rem;
+            color: var(--sw-accent);
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section {
+            background: var(--sw-dark);
+            color: rgba(255,255,255,0.8);
+            padding: 3rem 0 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="brand-logo">
+                            <span class="weave-animation">Source</span>Weaver
+                        </h1>
+                        <p class="hero-subtitle">
+                            Entrelazando fuentes de inteligencia OSINT para crear un tejido coherente de información procesable
+                        </p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="{{ path('app_login') }}" class="btn btn-primary-custom">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                            </a>
+                            <a href="#features" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-arrow-down-circle me-2"></i>Descubrir Más
+                            </a>
+                        </div>
+                        
+                        <!-- Technology Stack -->
+                        <div class="tech-grid">
+                            <div class="tech-item">
+                                <i class="bi bi-shield-check"></i>
+                                <small>VirusTotal</small>
+                            </div>
+                            <div class="tech-item">
+                                <i class="bi bi-search"></i>
+                                <small>Google</small>
+                            </div>
+                            <div class="tech-item">
+                                <i class="bi bi-person-badge"></i>
+                                <small>Social Media</small>
+                            </div>
+                            <div class="tech-item">
+                                <i class="bi bi-binoculars"></i>
+                                <small>Dorking</small>
+                            </div>
+                            <div class="tech-item">
+                                <i class="bi bi-person-exclamation"></i>
+                                <small>Breach Check</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="text-center">
+                        <div style="font-size: 12rem; color: rgba(255,255,255,0.2);">
+                            <i class="bi bi-diagram-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5" style="background: var(--sw-light);">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="h1 fw-bold mb-4" style="color: var(--sw-dark);">
+                        Inteligencia OSINT Unificada
+                    </h2>
+                    <p class="lead text-muted">
+                        SourceWeaver integra múltiples fuentes de inteligencia de fuentes abiertas en una plataforma cohesiva, 
+                        transformando datos dispersos en insights accionables.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-diagram-2"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Múltiples Fuentes</h4>
+                        <p class="text-muted">
+                            Integración seamless con VirusTotal, Google Search, redes sociales, 
+                            y múltiples APIs de inteligencia para una cobertura completa.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Procesamiento Inteligente</h4>
+                        <p class="text-muted">
+                            Análisis automatizado con Python y FastAPI que procesa y correlaciona 
+                            información de múltiples fuentes en tiempo real.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Insights Accionables</h4>
+                        <p class="text-muted">
+                            Visualización clara de resultados con recomendaciones específicas 
+                            y reportes detallados para la toma de decisiones informada.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4 mt-4">
+                <div class="col-lg-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Seguridad Empresarial</h4>
+                        <p class="text-muted">
+                            Arquitectura segura con autenticación robusta, control de acceso granular 
+                            y protección de datos sensibles en cada nivel.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Colaboración de Equipos</h4>
+                        <p class="text-muted">
+                            Workspaces compartidos, investigaciones colaborativas y gestión de 
+                            proyectos para equipos de ciberseguridad y analistas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">16+</div>
+                        <h5>Plataformas Sociales</h5>
+                        <p class="small text-muted">Búsqueda de alias en redes</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <h5>Herramientas OSINT</h5>
+                        <p class="small text-muted">APIs integradas</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <h5>Open Source</h5>
+                        <p class="small text-muted">Código abierto</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <h5>Disponibilidad</h5>
+                        <p class="small text-muted">Servicio continuo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-lg-8 mx-auto">
+                    <h2 class="h1 fw-bold mb-4" style="color: var(--sw-dark);">
+                        Comienza tu Investigación OSINT
+                    </h2>
+                    <p class="lead text-muted mb-4">
+                        Únete a la plataforma de inteligencia que transforma la manera de analizar 
+                        información de fuentes abiertas. Precisión, eficiencia y resultados unificados.
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="{{ path('app_login') }}" class="btn btn-primary-custom">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Empezar Ahora
+                        </a>
+                        <a href="http://localhost:8001/docs" target="_blank" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-book me-2"></i>Ver API Docs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="fw-bold mb-3" style="color: var(--sw-accent);">SourceWeaver</h5>
+                    <p class="mb-3">
+                        Plataforma de inteligencia OSINT que entrelaza múltiples fuentes para crear 
+                        un tejido coherente de información procesable.
+                    </p>
+                    <p class="small">
+                        <strong>Dominio:</strong> sourceweaver.tech
+                    </p>
+                </div>
+                <div class="col-lg-3">
+                    <h6 class="fw-bold mb-3">Tecnologías</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-check-circle me-2 text-success"></i>Symfony 7.2</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2 text-success"></i>FastAPI Python</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2 text-success"></i>Docker</li>
+                        <li class="mb-2"><i class="bi bi-check-circle me-2 text-success"></i>MySQL</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h6 class="fw-bold mb-3">Enlaces</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="{{ path('app_login') }}" class="text-decoration-none" style="color: var(--sw-accent);">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Acceder
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="http://localhost:8001/docs" target="_blank" class="text-decoration-none" style="color: var(--sw-accent);">
+                                <i class="bi bi-code-slash me-2"></i>API Docs
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="http://localhost:8001/openapi.json" target="_blank" class="text-decoration-none" style="color: var(--sw-accent);">
+                                <i class="bi bi-download me-2"></i>OpenAPI Schema
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.1);">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="mb-0 small">
+                        &copy; {{ "now"|date("Y") }} SourceWeaver. Sistema de inteligencia OSINT para entrelazar fuentes de información.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <small class="text-muted">
+                        Versión {{ app.environment == 'dev' ? 'Development' : 'Production' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Smooth scrolling -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // API Status Check
+        fetch('http://localhost:8001/health')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'healthy') {
+                    console.log('✅ FastAPI OSINT Service is healthy');
+                }
+            })
+            .catch(() => {
+                console.log('⚠️ FastAPI OSINT Service is not responding');
+            });
+    </script>
+</body>
+</html>
