@@ -57,6 +57,10 @@
                                                     <div class="text-muted small mt-1 ms-4">
                                                         Google Dorking para descubrimiento de información y activos
                                                     </div>
+                                                {% elseif choice.vars.value == 'haveibeenpwned' %}
+                                                    <div class="text-muted small mt-1 ms-4">
+                                                        Verificación de brechas de seguridad en emails y contraseñas
+                                                    </div>
                                                 {% endif %}
                                             </div>
                                         {% endfor %}

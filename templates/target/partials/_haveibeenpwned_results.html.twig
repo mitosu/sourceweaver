@@ -1,0 +1,191 @@
+{# HaveIBeenPwned Results Partial Template #}
+{% if data %}
+    {# Email Breach Results #}
+    {% if data.email is defined %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="bi bi-envelope-exclamation me-2"></i>Análisis de Brechas - {{ data.email }}
+                    </h6>
+                    <span class="badge {% if data.is_breached %}bg-danger{% else %}bg-success{% endif %} fs-6">
+                        {% if data.is_breached %}
+                            <i class="bi bi-exclamation-triangle me-1"></i>{{ data.breach_count }} breach(es) encontrado(s)
+                        {% else %}
+                            <i class="bi bi-shield-check me-1"></i>Sin brechas conocidas
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {% if data.is_breached and data.breaches|length > 0 %}
+            {# Risk Assessment #}
+            <div class="alert alert-{% if data.risk_assessment == 'critical' %}danger{% elseif data.risk_assessment == 'high' %}warning{% elseif data.risk_assessment == 'medium' %}info{% else %}success{% endif %} mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    <div>
+                        <strong>Nivel de Riesgo: {{ data.risk_assessment|upper }}</strong>
+                        <div class="small mt-1">
+                            Este email ha sido comprometido en {{ data.breach_count }} brecha(s) de seguridad.
+                            {% if data.most_recent_breach %}
+                                La más reciente ocurrió el {{ data.most_recent_breach|date('d/m/Y') }}.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Data Classes Summary #}
+            {% if data.data_classes_affected|length > 0 %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-exclamation-diamond me-1"></i>Tipos de Datos Comprometidos
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for data_class in data.data_classes_affected %}
+                                <div class="col-md-3 mb-2">
+                                    <span class="badge bg-warning text-dark">
+                                        {% if data_class == 'Email addresses' %}
+                                            <i class="bi bi-envelope me-1"></i>Emails
+                                        {% elseif data_class == 'Passwords' %}
+                                            <i class="bi bi-key me-1"></i>Contraseñas
+                                        {% elseif data_class == 'Names' %}
+                                            <i class="bi bi-person me-1"></i>Nombres
+                                        {% elseif data_class == 'Usernames' %}
+                                            <i class="bi bi-person-badge me-1"></i>Usuarios
+                                        {% elseif data_class == 'IP addresses' %}
+                                            <i class="bi bi-hdd-network me-1"></i>IPs
+                                        {% else %}
+                                            <i class="bi bi-info-circle me-1"></i>{{ data_class }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Breach Details #}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-list-ul me-1"></i>Detalles de las Brechas ({{ data.breach_count }})
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% for breach in data.breaches %}
+                        <div class="border-bottom p-3 {% if loop.last %}border-bottom-0{% endif %}">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-start mb-2">
+                                        {% if breach.logo_path %}
+                                            <img src="{{ breach.logo_path }}" alt="{{ breach.name }}" 
+                                                 class="me-2 rounded" style="width: 24px; height: 24px;">
+                                        {% else %}
+                                            <i class="bi bi-globe me-2 text-danger"></i>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-1">{{ breach.title ?? breach.name }}</h6>
+                                            {% if breach.domain %}
+                                                <small class="text-muted">{{ breach.domain }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if breach.description %}
+                                        <p class="text-muted small mb-2">{{ breach.description|striptags|slice(0, 200) }}...</p>
+                                    {% endif %}
+                                    
+                                    {% if breach.data_classes|length > 0 %}
+                                        <div class="mb-2">
+                                            <small class="text-muted">Datos comprometidos:</small>
+                                            {% for data_class in breach.data_classes|slice(0, 5) %}
+                                                <span class="badge bg-light text-dark me-1">{{ data_class }}</span>
+                                            {% endfor %}
+                                            {% if breach.data_classes|length > 5 %}
+                                                <span class="badge bg-secondary">+{{ breach.data_classes|length - 5 }} más</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="text-end">
+                                        {% if breach.breach_date %}
+                                            <div class="mb-1">
+                                                <small class="text-muted">Fecha de brecha:</small><br>
+                                                <strong>{{ breach.breach_date|date('d/m/Y') }}</strong>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if breach.pwn_count %}
+                                            <div class="mb-1">
+                                                <small class="text-muted">Cuentas afectadas:</small><br>
+                                                <strong class="text-danger">{{ breach.pwn_count|number_format }}</strong>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="mt-2">
+                                            {% if breach.is_verified %}
+                                                <span class="badge bg-success me-1">Verificado</span>
+                                            {% endif %}
+                                            {% if breach.is_sensitive %}
+                                                <span class="badge bg-warning text-dark">Sensible</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+    {# Password Breach Results #}
+    {% elseif data.hash_suffix is defined %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <h6>
+                    <i class="bi bi-key me-2"></i>Análisis de Contraseña Comprometida
+                </h6>
+            </div>
+        </div>
+        
+        <div class="alert alert-{% if data.is_pwned %}danger{% else %}success{% endif %}">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-{% if data.is_pwned %}exclamation-triangle{% else %}shield-check{% endif %} me-2"></i>
+                <div>
+                    {% if data.is_pwned %}
+                        <strong>Contraseña Comprometida</strong>
+                        <div class="small mt-1">
+                            Esta contraseña ha aparecido {{ data.count|number_format }} veces en brechas de datos conocidas.
+                        </div>
+                    {% else %}
+                        <strong>Contraseña Segura</strong>
+                        <div class="small mt-1">
+                            Esta contraseña no aparece en ninguna brecha de datos conocida.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        {# Generic results display #}
+        <div class="alert alert-info">
+            <h6>Resultados de HaveIBeenPwned</h6>
+            <pre class="mb-0"><code>{{ data|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        No se pudieron obtener datos de HaveIBeenPwned para este análisis.
+    </div>
+{% endif %}

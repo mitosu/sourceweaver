@@ -52,6 +52,7 @@ class TargetType extends AbstractType
                 'choices' => [
                     'VirusTotal' => 'virustotal',
                     'Google Search' => 'google_search',
+                    'HaveIBeenPwned' => 'haveibeenpwned',
                 ],
                 'multiple' => true,
                 'expanded' => true,

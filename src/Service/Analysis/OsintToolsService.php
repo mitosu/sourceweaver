@@ -73,6 +73,7 @@ class OsintToolsService
         return match ($tool) {
             'virustotal' => $this->analyzeWithVirusTotal($target),
             'google_search' => $this->analyzeWithGoogleSearch($target),
+            'haveibeenpwned' => $this->analyzeWithHaveIBeenPwned($target),
             default => null
         };
     }
@@ -204,6 +205,12 @@ class OsintToolsService
                 'description' => 'Google Dorking para descubrimiento de información y exposición de activos',
                 'supported_types' => ['domain', 'email', 'url', 'alias'],
                 'icon' => 'bi-search'
+            ],
+            'haveibeenpwned' => [
+                'name' => 'HaveIBeenPwned',
+                'description' => 'Verificación de brechas de seguridad en emails y contraseñas comprometidas',
+                'supported_types' => ['email'],
+                'icon' => 'bi-person-exclamation'
             ]
         ];
     }
@@ -213,6 +220,7 @@ class OsintToolsService
         return match ($tool) {
             'virustotal' => $this->testVirusTotalConnection(),
             'google_search' => $this->testGoogleSearchConnection(),
+            'haveibeenpwned' => $this->testHaveIBeenPwnedConnection(),
             default => false
         };
     }
@@ -678,6 +686,84 @@ class OsintToolsService
 
         } catch (\Exception $e) {
             $this->logger->error('Google Search connection test failed', [
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    private function analyzeWithHaveIBeenPwned(Target $target): ?AnalysisResult
+    {
+        $targetType = $target->getType();
+        $targetValue = $target->getValue();
+
+        // HaveIBeenPwned primarily supports email analysis
+        if ($targetType !== 'email') {
+            $this->logger->warning('HaveIBeenPwned does not support target type', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue
+            ]);
+            return null;
+        }
+
+        try {
+            // Call HaveIBeenPwned API via our Python service
+            $url = self::PYTHON_API_BASE_URL . '/haveibeenpwned/breachedaccount/' . urlencode($targetValue);
+            
+            $this->logger->info('Calling HaveIBeenPwned API via Python service', [
+                'url' => $url,
+                'target_type' => $targetType,
+                'target_value' => $targetValue
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'timeout' => 60,
+                'headers' => [
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+            $data = $response->toArray();
+
+            $this->logger->info('HaveIBeenPwned analysis completed', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
+                'is_breached' => $data['is_breached'] ?? false,
+                'breach_count' => $data['breach_count'] ?? 0
+            ]);
+
+            $result = new AnalysisResult();
+            $result->setTarget($target);
+            $result->setSource('HaveIBeenPwned');
+            $result->setData($data);
+            $result->setStatus('success');
+
+            $this->entityManager->persist($result);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            $this->logger->error('HaveIBeenPwned API call failed', [
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    private function testHaveIBeenPwnedConnection(): bool
+    {
+        try {
+            $response = $this->httpClient->request('GET', self::PYTHON_API_BASE_URL . '/haveibeenpwned/health', [
+                'timeout' => 10
+            ]);
+
+            $data = $response->toArray();
+            return $data['status'] === 'healthy';
+
+        } catch (\Exception $e) {
+            $this->logger->error('HaveIBeenPwned connection test failed', [
                 'error' => $e->getMessage()
             ]);
             return false;
