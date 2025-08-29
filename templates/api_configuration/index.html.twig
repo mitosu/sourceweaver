@@ -6,449 +6,281 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">Configuración de APIs OSINT</h1>
+            <div>
+                <h1 class="h3 mb-1">API OSINT de FastAPI</h1>
+                <p class="text-muted mb-0">Microservicio Python para análisis de inteligencia</p>
+            </div>
             <div class="d-flex gap-2">
-                <a href="{{ path('api_configuration_download_template') }}" 
-                   class="btn btn-outline-secondary" download>
-                    <i class="bi bi-download me-1"></i>Descargar Template
+                <a href="http://localhost:8001/openapi.json" 
+                   class="btn btn-outline-primary" 
+                   target="_blank"
+                   title="Descargar especificación OpenAPI/Swagger">
+                    <i class="bi bi-download me-1"></i>Descargar Swagger
                 </a>
-                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#uploadTemplateModal">
-                    <i class="bi bi-upload me-1"></i>Subir Template
-                </button>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newApiModal">
-                    <i class="bi bi-plus me-1"></i>Nueva API
-                </button>
+                <a href="http://localhost:8001/docs" 
+                   class="btn btn-outline-info" 
+                   target="_blank"
+                   title="Abrir documentación interactiva">
+                    <i class="bi bi-book me-1"></i>Documentación
+                </a>
             </div>
         </div>
 
-        {% if configurations is empty %}
-            <div class="alert alert-info">
-                <h5 class="alert-heading">
-                    <i class="bi bi-info-circle me-2"></i>No hay configuraciones de APIs
-                </h5>
-                <p class="mb-3">
-                    Aún no has configurado ninguna API para OSINT. Para empezar:
-                </p>
-                <ul class="mb-3">
-                    <li>Descarga un template de ejemplo para conocer la estructura</li>
-                    <li>Configura manualmente una nueva API usando el botón "Nueva API"</li>
-                    <li>O sube un archivo de configuración JSON existente</li>
-                </ul>
-                <hr>
-                <p class="mb-0">
-                    Las APIs configuradas estarán disponibles globalmente para todos los workspaces 
-                    y te permitirán realizar análisis de ciberinteligencia como los que proporciona SpiderFoot.
-                </p>
-            </div>
-        {% else %}
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-gear me-2"></i>APIs Configuradas ({{ configurations|length }})
-                    </h5>
-                    <small class="text-muted">Disponibles globalmente para todos los workspaces</small>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>API</th>
-                                    <th>Descripción</th>
-                                    <th>Opciones</th>
-                                    <th>Estado</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for config in configurations %}
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <strong>{{ config.name }}</strong>
-                                                {% if config.documentationUrl %}
-                                                    <a href="{{ config.documentationUrl }}" target="_blank" class="ms-2" title="Ver documentación">
-                                                        <i class="bi bi-box-arrow-up-right"></i>
-                                                    </a>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {% if config.description %}
-                                                {{ config.description|slice(0, 80) }}{% if config.description|length > 80 %}...{% endif %}
-                                            {% else %}
-                                                <span class="text-muted">Sin descripción</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">
-                                                {{ config.options|length }} opciones
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if config.isActive %}bg-success{% else %}bg-danger{% endif %}">
-                                                {% if config.isActive %}Activa{% else %}Inactiva{% endif %}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <small class="text-muted">
-                                                {{ config.createdAt|date('d/m/Y H:i') }}
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ path('api_configuration_edit', {id: config.id}) }}" 
-                                                   class="btn btn-outline-primary" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button type="button" 
-                                                        class="btn btn-outline-{% if config.isActive %}warning{% else %}success{% endif %}"
-                                                        onclick="toggleApiConfiguration('{{ config.id }}', this)"
-                                                        title="{% if config.isActive %}Desactivar{% else %}Activar{% endif %}">
-                                                    <i class="bi bi-{% if config.isActive %}pause{% else %}play{% endif %}"></i>
-                                                </button>
-                                                <form method="post" 
-                                                      action="{{ path('api_configuration_delete', {id: config.id}) }}" 
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('¿Estás seguro de eliminar esta configuración?')">
-                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+        <!-- FastAPI OSINT Service Information -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card border-success">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0 text-success">
+                            <i class="bi bi-check-circle me-2"></i>FastAPI OSINT Microservice
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            Microservicio Python desarrollado con FastAPI que proporciona múltiples herramientas 
+                            de OSINT integradas para análisis de inteligencia de fuentes abiertas.
+                        </p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-tools me-2"></i>Herramientas Disponibles:</h6>
+                                <ul class="list-unstyled mb-3">
+                                    <li><i class="bi bi-shield-check text-primary me-2"></i>VirusTotal</li>
+                                    <li><i class="bi bi-search text-primary me-2"></i>Google Search</li>
+                                    <li><i class="bi bi-person-badge text-primary me-2"></i>Alias/Social Media Search</li>
+                                    <li><i class="bi bi-binoculars text-primary me-2"></i>Advanced Dorking</li>
+                                    <li><i class="bi bi-person-exclamation text-primary me-2"></i>HaveIBeenPwned</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-bullseye me-2"></i>Tipos de Target Soportados:</h6>
+                                <ul class="list-unstyled mb-3">
+                                    <li><i class="bi bi-hdd-network text-info me-2"></i>Direcciones IP</li>
+                                    <li><i class="bi bi-globe text-info me-2"></i>Dominios</li>
+                                    <li><i class="bi bi-link-45deg text-info me-2"></i>URLs</li>
+                                    <li><i class="bi bi-envelope text-info me-2"></i>Emails</li>
+                                    <li><i class="bi bi-fingerprint text-info me-2"></i>Hashes</li>
+                                    <li><i class="bi bi-person-badge text-info me-2"></i>Alias/Usernames</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Modal para nueva API -->
-<div class="modal fade" id="newApiModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nueva API de OSINT</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="newApiForm">
-                    <div class="mb-3">
-                        <label for="api_name" class="form-label">Nombre de la API *</label>
-                        <input type="text" class="form-control" id="api_name" name="api_name" 
-                               placeholder="Ej: AbuseIPDB, VirusTotal, Shodan" required>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-activity me-2"></i>Estado del Servicio
+                        </h6>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="api_description" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="api_description" name="api_description" 
-                                  rows="2" placeholder="Descripción de la API y su propósito"></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="api_documentation_url" class="form-label">URL de Documentación</label>
-                        <input type="url" class="form-control" id="api_documentation_url" name="api_documentation_url" 
-                               placeholder="https://docs.api.com">
-                        <div class="form-text">URL opcional a la documentación de la API</div>
-                    </div>
-                    
-                    <hr class="my-4">
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Configuración de la API</h6>
-                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addApiOption()">
-                            <i class="bi bi-plus me-1"></i>Añadir Opción
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Estado:</span>
+                            <span class="badge bg-success" id="api-status">
+                                <i class="bi bi-check-circle me-1"></i>Activo
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Puerto:</span>
+                            <code>8001</code>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Protocolo:</span>
+                            <code>HTTP</code>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="checkApiHealth()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Verificar Estado
                         </button>
                     </div>
-                    
-                    <div id="api-options-container">
-                        <!-- Las opciones dinámicas se añadirán aquí -->
-                        <div class="alert alert-info alert-sm">
-                            <small>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints Information -->
+        {% set fastapi_endpoints = [
+            {
+                'path': '/health',
+                'method': 'GET',
+                'description': 'Verificación de salud del servicio',
+                'category': 'Sistema'
+            },
+            {
+                'path': '/api/v1/virustotal/*',
+                'method': 'GET/POST',
+                'description': 'Análisis con VirusTotal',
+                'category': 'OSINT'
+            },
+            {
+                'path': '/api/v1/google-search/*',
+                'method': 'GET',
+                'description': 'Búsquedas de Google',
+                'category': 'OSINT'
+            },
+            {
+                'path': '/api/v1/alias-search/*',
+                'method': 'GET/POST',
+                'description': 'Búsqueda de alias en redes sociales',
+                'category': 'OSINT'
+            },
+            {
+                'path': '/api/v1/dorking/*',
+                'method': 'GET',
+                'description': 'Google Dorking avanzado',
+                'category': 'OSINT'
+            },
+            {
+                'path': '/haveibeenpwned/*',
+                'method': 'GET',
+                'description': 'Verificación de brechas de seguridad',
+                'category': 'OSINT'
+            }
+        ] %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list-ul me-2"></i>Endpoints Disponibles
+                </h5>
+                <small class="text-muted">Endpoints de la API FastAPI OSINT en puerto 8001</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Método</th>
+                                <th>Descripción</th>
+                                <th>Categoría</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for endpoint in fastapi_endpoints %}
+                                <tr>
+                                    <td>
+                                        <code class="bg-light px-2 py-1 rounded">{{ endpoint.path }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if endpoint.method == 'GET' %}primary{% elseif endpoint.method == 'POST' %}success{% else %}info{% endif %}">
+                                            {{ endpoint.method }}
+                                        </span>
+                                    </td>
+                                    <td>{{ endpoint.description }}</td>
+                                    <td>
+                                        <span class="badge {% if endpoint.category == 'Sistema' %}bg-secondary{% else %}bg-warning{% endif %}">
+                                            {{ endpoint.category }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Activo
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <small class="text-muted">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Añade las opciones de configuración necesarias para tu API (API Keys, URLs base, timeouts, etc.)
+                                Para más detalles sobre cada endpoint, consulta la 
+                                <a href="http://localhost:8001/docs" target="_blank">documentación interactiva</a> de FastAPI.
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted">
+                                Base URL: <code>http://localhost:8001</code>
                             </small>
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="createNewApi()">
-                    <i class="bi bi-plus me-1"></i>Crear API
-                </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal para subir template -->
-<div class="modal fade" id="uploadTemplateModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Subir Template de Configuración</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="uploadTemplateForm" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="template" class="form-label">Archivo JSON</label>
-                        <input type="file" class="form-control" id="template" name="template" 
-                               accept=".json" required>
-                        <div class="form-text">
-                            Sube un archivo JSON con la configuración de la API. 
-                            <a href="{{ path('api_configuration_download_template') }}" download>
-                                Descarga un template de ejemplo
-                            </a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="uploadTemplate()">
-                    <i class="bi bi-upload me-1"></i>Subir Template
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
 <script>
-let optionCounter = 0;
-
-function testApiConnection(configId) {
-    const originalHtml = event.target.innerHTML;
-    event.target.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Probando...';
-    event.target.disabled = true;
+// Function to check FastAPI health status
+function checkApiHealth() {
+    const statusElement = document.getElementById('api-status');
+    const originalHtml = statusElement.innerHTML;
+    const button = event.target;
+    const originalButtonHtml = button.innerHTML;
     
-    fetch(`{{ path('api_configuration_test', {id: 'ID_PLACEHOLDER'}) }}`.replace('ID_PLACEHOLDER', configId), {
-        method: 'POST',
+    // Show loading state
+    statusElement.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Verificando...';
+    statusElement.className = 'badge bg-warning';
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verificando...';
+    button.disabled = true;
+    
+    // Check FastAPI health endpoint
+    fetch('http://localhost:8001/health', {
+        method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            alert('✅ Prueba de conexión exitosa\n\n' + data.message);
+        if (data.status === 'healthy') {
+            statusElement.innerHTML = '<i class="bi bi-check-circle me-1"></i>Activo';
+            statusElement.className = 'badge bg-success';
+            
+            // Show detailed info in console for debugging
+            console.log('FastAPI Health Check:', data);
+            
+            // Optional: Show success message
+            setTimeout(() => {
+                alert('✅ API FastAPI está funcionando correctamente\n\n' + 
+                      'Servicio: ' + data.service + '\n' + 
+                      'Versión: ' + data.version + '\n' +
+                      'Servicios disponibles: ' + Object.keys(data.services || {}).length);
+            }, 100);
         } else {
-            alert('❌ Error en la prueba de conexión\n\n' + (data.error || 'Error desconocido'));
+            throw new Error('API devolvió estado no saludable');
         }
     })
     .catch(error => {
-        alert('❌ Error en la prueba de conexión\n\nNo se pudo conectar con la API');
+        statusElement.innerHTML = '<i class="bi bi-x-circle me-1"></i>Inactivo';
+        statusElement.className = 'badge bg-danger';
+        
+        console.error('FastAPI Health Check Error:', error);
+        
+        // Show error message
+        setTimeout(() => {
+            alert('❌ No se pudo conectar con la API FastAPI\n\n' + 
+                  'Error: ' + error.message + '\n\n' +
+                  'Verifica que el contenedor Python esté ejecutándose en el puerto 8001.');
+        }, 100);
     })
     .finally(() => {
-        event.target.innerHTML = originalHtml;
-        event.target.disabled = false;
+        // Reset button state
+        button.innerHTML = originalButtonHtml;
+        button.disabled = false;
     });
 }
 
-function toggleApiConfiguration(configId, button) {
-    fetch(`/api-configuration/${configId}/toggle`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Error al cambiar el estado de la configuración');
-        }
-    })
-    .catch(error => {
-        alert('Error al cambiar el estado de la configuración');
-    });
-}
-
-function addApiOption() {
-    const container = document.getElementById('api-options-container');
-    
-    // Remove the info alert if it exists
-    const infoAlert = container.querySelector('.alert-info');
-    if (infoAlert) {
-        infoAlert.remove();
-    }
-    
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'api-option-row mb-3 p-3 border rounded';
-    optionDiv.innerHTML = `
-        <div class="row">
-            <div class="col-md-5">
-                <label for="option_${optionCounter}" class="form-label">Opción (Label) *</label>
-                <input type="text" class="form-control option-input" id="option_${optionCounter}" name="options[${optionCounter}][name]" 
-                       placeholder="Ej: API_KEY, BASE_URL, TIMEOUT" required
-                       onchange="updateOptionLabel(this, ${optionCounter})">
-                <small class="form-text text-muted">Este será el label del campo</small>
-            </div>
-            <div class="col-md-5">
-                <label for="value_${optionCounter}" class="form-label">Valor</label>
-                <input type="text" class="form-control" id="value_${optionCounter}" name="options[${optionCounter}][value]" 
-                       placeholder="Valor de la opción">
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-outline-danger btn-sm w-100 mb-3" onclick="removeApiOption(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="encrypted_${optionCounter}" name="options[${optionCounter}][encrypted]" value="1">
-                    <label class="form-check-label" for="encrypted_${optionCounter}">
-                        <i class="bi bi-shield-lock me-1"></i>Encriptar valor (para datos sensibles)
-                    </label>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    container.appendChild(optionDiv);
-    optionCounter++;
-}
-
-function removeApiOption(button) {
-    const optionRow = button.closest('.api-option-row');
-    optionRow.remove();
-    
-    // If no more options, show the info alert again
-    const container = document.getElementById('api-options-container');
-    if (container.children.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-info alert-sm">
-                <small>
-                    <i class="bi bi-info-circle me-1"></i>
-                    Añade las opciones de configuración necesarias para tu API (API Keys, URLs base, timeouts, etc.)
-                </small>
-            </div>
-        `;
-    }
-}
-
-function updateOptionLabel(input, counter) {
-    const valueLabel = document.querySelector(`label[for="value_${counter}"]`);
-    if (valueLabel && input.value.trim()) {
-        valueLabel.textContent = input.value.trim();
-    } else {
-        valueLabel.textContent = 'Valor';
-    }
-}
-
-function createNewApi() {
-    const form = document.getElementById('newApiForm');
-    const formData = new FormData(form);
-    
-    // Validar campos requeridos
-    const name = formData.get('api_name');
-    
-    if (!name) {
-        alert('Por favor completa el nombre de la API');
-        return;
-    }
-    
-    // Recopilar las opciones dinámicas
-    const options = [];
-    const optionRows = document.querySelectorAll('.api-option-row');
-    
-    optionRows.forEach((row, index) => {
-        const nameInput = row.querySelector(`input[name="options[${index}][name]"]`);
-        const valueInput = row.querySelector(`input[name="options[${index}][value]"]`);
-        const encryptedInput = row.querySelector(`input[name="options[${index}][encrypted]"]`);
-        
-        if (nameInput && nameInput.value.trim()) {
-            options.push({
-                option_name: nameInput.value.trim(),
-                option_value: valueInput ? valueInput.value : '',
-                is_encrypted: encryptedInput ? encryptedInput.checked : false
-            });
-        }
-    });
-    
-    // Crear el objeto JSON para enviar
-    const apiData = {
-        name: name,
-        description: formData.get('api_description') || '',
-        documentation_url: formData.get('api_documentation_url') || '',
-        options: options
-    };
-    
-    // Enviar al servidor
-    fetch('{{ path('api_configuration_create_from_modal') }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(apiData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('API creada exitosamente');
-            location.reload();
-        } else {
-            alert(data.error || 'Error al crear la API');
-        }
-    })
-    .catch(error => {
-        alert('Error al crear la API');
-        console.error('Error:', error);
-    });
-}
-
-function uploadTemplate() {
-    const form = document.getElementById('uploadTemplateForm');
-    const formData = new FormData(form);
-    
-    fetch('{{ path('api_configuration_upload_template') }}', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.error || 'Error al subir el template');
-        }
-    })
-    .catch(error => {
-        alert('Error al subir el template');
-    });
-}
-
-// Inicializar con una opción por defecto cuando se abre el modal
-document.getElementById('newApiModal').addEventListener('shown.bs.modal', function () {
-    // Reset form
-    document.getElementById('newApiForm').reset();
-    const container = document.getElementById('api-options-container');
-    container.innerHTML = `
-        <div class="alert alert-info alert-sm">
-            <small>
-                <i class="bi bi-info-circle me-1"></i>
-                Añade las opciones de configuración necesarias para tu API (API Keys, URLs base, timeouts, etc.)
-            </small>
-        </div>
-    `;
-    optionCounter = 0;
-    
-    // Add one default option
-    addApiOption();
+// Check API health on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-check API health when page loads
+    setTimeout(checkApiHealth, 1000);
 });
+
+// Refresh page every 30 seconds to keep status updated
+setInterval(function() {
+    // Only auto-refresh if not manually checking
+    const button = document.querySelector('button[onclick="checkApiHealth()"]');
+    if (button && !button.disabled) {
+        checkApiHealth();
+    }
+}, 30000);
 </script>
 {% endblock %}
