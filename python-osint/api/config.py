@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     shodan_api_key: Optional[str] = Field(None, env="SHODAN_API_KEY")
     google_api_key: Optional[str] = Field(None, env="GOOGLE_API_KEY")
     google_cse_id: Optional[str] = Field(None, env="GOOGLE_CSE_ID")
+    haveibeenpwned_api_key: Optional[str] = Field(None, env="HAVEIBEENPWNED_API_KEY")
     
     # Paths
     scripts_path: str = Field(default="/app/scripts", env="SCRIPTS_PATH")
@@ -60,6 +61,7 @@ class Settings(BaseSettings):
             'shodan_api_key': self.shodan_api_key,
             'google_api_key': self.google_api_key,
             'google_cse_id': self.google_cse_id,
+            'haveibeenpwned_api_key': self.haveibeenpwned_api_key,
         }
     
     def get_script_env(self) -> Dict[str, str]:
@@ -81,6 +83,8 @@ class Settings(BaseSettings):
             env['GOOGLE_API_KEY'] = self.google_api_key
         if self.google_cse_id:
             env['GOOGLE_CSE_ID'] = self.google_cse_id
+        if self.haveibeenpwned_api_key:
+            env['HAVEIBEENPWNED_API_KEY'] = self.haveibeenpwned_api_key
         
         return env
 
