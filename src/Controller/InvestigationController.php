@@ -7,6 +7,7 @@ use App\Form\InvestigationType;
 use App\Repository\InvestigationRepository;
 use App\Repository\WorkspaceMembershipRepository;
 use App\Service\ActivityLogService;
+use App\Service\InvestigationExportService;
 use App\Service\Workspace\GetUserWorkspaces;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -183,6 +184,26 @@ final class InvestigationController extends AbstractController
             'investigation' => $investigation,
             'workspaces' => $workspaces
         ]);
+    }
+
+    #[Route('/{id}/export-html', name: 'investigation_export_html')]
+    public function exportHtml(
+        Investigation $investigation,
+        InvestigationExportService $exportService
+    ): Response {
+        $htmlContent = $exportService->generateHtmlReport($investigation);
+        
+        $filename = sprintf(
+            'investigation_%s_%s.html',
+            $investigation->getName(),
+            (new \DateTimeImmutable())->format('Y-m-d_H-i-s')
+        );
+        
+        $response = new Response($htmlContent);
+        $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
+        $response->headers->set('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
+        
+        return $response;
     }
 
     #[Route('/{id}/delete', name: 'investigation_delete', methods: ['POST'])]

@@ -17,6 +17,9 @@
                 <a href="{{ path('investigation_dashboard', {id: investigation.id}) }}" class="btn btn-outline-info">
                     <i class="bi bi-graph-up me-1"></i>Dashboard
                 </a>
+                <a href="{{ path('investigation_export_html', {id: investigation.id}) }}" class="btn btn-outline-success" target="_blank">
+                    <i class="bi bi-download me-1"></i>Exportar HTML
+                </a>
                 <a href="{{ path('investigation_edit', {id: investigation.id}) }}" class="btn btn-outline-primary">
                     <i class="bi bi-pencil me-1"></i>Editar
                 </a>

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Investigación: {{ investigation.name }}</title>
+    <style>
+        @media print {
+            body { print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            border-bottom: 3px solid #007acc;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #007acc;
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 300;
+        }
+        
+        .header .meta {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .summary-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+        
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #007acc;
+            margin: 0;
+        }
+        
+        .section {
+            margin: 40px 0;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #007acc 0%, #0056b3 100%);
+            color: white;
+            padding: 15px 25px;
+            margin: 0 0 20px 0;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .target-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .target-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .target-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .target-value {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-analyzed { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-analyzing { background: #d1ecf1; color: #0c5460; }
+        
+        .target-body {
+            padding: 20px;
+        }
+        
+        .tools-used {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .tool-badge {
+            background: #007acc;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .analysis-results {
+            margin: 20px 0;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .result-source {
+            font-weight: 600;
+            color: #007acc;
+        }
+        
+        .result-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .result-success { background: #d4edda; color: #155724; }
+        .result-error { background: #f8d7da; color: #721c24; }
+        
+        .threat-indicators {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .threat-indicators.high-risk {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .threat-indicators h5 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 1rem;
+        }
+        
+        .threat-indicators.high-risk h5 {
+            color: #721c24;
+        }
+        
+        .recommendations {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .recommendations h5 {
+            margin: 0 0 10px 0;
+            color: #0c5460;
+            font-size: 1rem;
+        }
+        
+        .recommendations ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .data-table th,
+        .data-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .data-table td {
+            font-size: 0.85rem;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ investigation.name }}</h1>
+            <div class="meta">
+                <strong>Workspace:</strong> {{ investigation.workspace.name }} |
+                <strong>Creada:</strong> {{ investigation.createdAt|date('d/m/Y H:i') }} |
+                <strong>Estado:</strong> {{ investigation.status|title }} |
+                <strong>Prioridad:</strong> {{ investigation.priority|title }}<br>
+                <strong>Reporte generado:</strong> {{ exportDate|date('d/m/Y H:i') }}
+            </div>
+            {% if investigation.description %}
+                <div class="meta" style="margin-top: 15px;">
+                    <strong>Descripción:</strong> {{ investigation.description }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Total Targets</h3>
+                <p class="value">{{ totalTargets }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Analizados</h3>
+                <p class="value">{{ analyzedTargets }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Pendientes</h3>
+                <p class="value">{{ pendingTargets }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Con Errores</h3>
+                <p class="value">{{ errorTargets }}</p>
+            </div>
+        </div>
+
+        {% if targetsData is not empty %}
+            <!-- Targets Analysis -->
+            <div class="section">
+                <h2 class="section-header">Análisis Detallado de Targets</h2>
+                
+                {% for targetData in targetsData %}
+                    <div class="target-card page-break">
+                        <div class="target-header">
+                            <div class="target-info">
+                                <h4>{{ targetData.target.type|upper }}: <span class="target-value">{{ targetData.target.value }}</span></h4>
+                                {% if targetData.target.description %}
+                                    <small style="color: #666;">{{ targetData.target.description }}</small>
+                                {% endif %}
+                            </div>
+                            <span class="status-badge status-{{ targetData.target.status }}">
+                                {{ targetData.target.status|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="target-body">
+                            <!-- Tools Used -->
+                            {% if targetData.target.osintTools is not empty %}
+                                <div class="tools-used">
+                                    <strong>Herramientas utilizadas:</strong>
+                                    {% for tool in targetData.target.osintTools %}
+                                        <span class="tool-badge">{{ tool|upper }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Target Summary -->
+                            {% if targetData.summary.threat_indicators is not empty %}
+                                <div class="threat-indicators {{ targetData.summary.threat_indicators|length > 1 ? 'high-risk' : '' }}">
+                                    <h5>⚠️ Indicadores de Amenaza</h5>
+                                    <ul>
+                                        {% for indicator in targetData.summary.threat_indicators %}
+                                            <li>{{ indicator }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            <!-- Recommendations -->
+                            {% if targetData.summary.recommendations is not empty %}
+                                <div class="recommendations">
+                                    <h5>💡 Recomendaciones</h5>
+                                    <ul>
+                                        {% for recommendation in targetData.summary.recommendations %}
+                                            <li>{{ recommendation }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            <!-- Analysis Results -->
+                            {% if targetData.analysisResults is not empty %}
+                                <div class="analysis-results">
+                                    <h5>📊 Resultados del Análisis</h5>
+                                    
+                                    {% for result in targetData.analysisResults %}
+                                        <div class="result-item">
+                                            <div class="result-header">
+                                                <span class="result-source">{{ result.source|upper }}</span>
+                                                <span class="result-status result-{{ result.status }}">
+                                                    {{ result.status|title }}
+                                                </span>
+                                            </div>
+                                            
+                                            {% if result.status == 'success' %}
+                                                {% if result.source == 'virustotal' or result.source == 'VirusTotal' %}
+                                                    {% set vt = result.data %}
+                                                    
+                                                    <!-- Basic VirusTotal Information -->
+                                                    {% if vt.reputation is defined %}
+                                                        <p><strong>Detecciones:</strong> {{ vt.reputation }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if vt.analysis_date is defined %}
+                                                        <p><strong>Fecha de análisis:</strong> {{ vt.analysis_date|date('d/m/Y H:i') }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if vt.permalink is defined %}
+                                                        <p><strong>Ver en VirusTotal:</strong> <a href="{{ vt.permalink }}" target="_blank">{{ vt.permalink }}</a></p>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Stats Table -->
+                                                    {% if vt.stats is defined %}
+                                                        <table class="data-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Estado</th>
+                                                                    <th>Cantidad</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for status, count in vt.stats %}
+                                                                    <tr>
+                                                                        <td>{{ status|title }}</td>
+                                                                        <td>{{ count }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    {% endif %}
+                                                    
+                                                    <!-- File Attributes -->
+                                                    {% if vt.attributes is defined %}
+                                                        <p><strong>Información del archivo:</strong></p>
+                                                        <ul style="font-size: 0.9rem;">
+                                                            {% if vt.attributes.md5 is defined %}
+                                                                <li><strong>MD5:</strong> {{ vt.attributes.md5 }}</li>
+                                                            {% endif %}
+                                                            {% if vt.attributes.sha1 is defined %}
+                                                                <li><strong>SHA1:</strong> {{ vt.attributes.sha1 }}</li>
+                                                            {% endif %}
+                                                            {% if vt.attributes.sha256 is defined %}
+                                                                <li><strong>SHA256:</strong> {{ vt.attributes.sha256 }}</li>
+                                                            {% endif %}
+                                                            {% if vt.attributes.size is defined %}
+                                                                <li><strong>Tamaño:</strong> {{ vt.attributes.size|number_format }} bytes</li>
+                                                            {% endif %}
+                                                            {% if vt.attributes.type_description is defined %}
+                                                                <li><strong>Tipo:</strong> {{ vt.attributes.type_description }}</li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Debug information - Direct access to result data -->
+                                                    <details style="margin: 10px 0; font-size: 0.8rem;">
+                                                        <summary style="cursor: pointer; color: #007acc;">Ver datos técnicos completos (debug)</summary>
+                                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.75rem; overflow: auto; max-height: 300px;">{{ result.data|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</pre>
+                                                    </details>
+
+                                                {% elseif result.source == 'google_search' or result.source == 'Google Search' %}
+                                                    {% set gs = result.data %}
+                                                    
+                                                    <!-- Google Search Information -->
+                                                    {% if gs.searchInformation is defined and gs.searchInformation.totalResults is defined %}
+                                                        <p><strong>Resultados encontrados:</strong> {{ gs.searchInformation.totalResults|number_format }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if gs.searchInformation is defined and gs.searchInformation.searchTime is defined %}
+                                                        <p><strong>Tiempo de búsqueda:</strong> {{ gs.searchInformation.searchTime }}s</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if gs.items is defined and gs.items is not empty %}
+                                                        <table class="data-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Título</th>
+                                                                    <th>URL</th>
+                                                                    <th>Descripción</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for item in gs.items|slice(0, 5) %}
+                                                                    <tr>
+                                                                        <td>{{ item.title|default('N/A')|slice(0, 60) }}{% if item.title|default('')|length > 60 %}...{% endif %}</td>
+                                                                        <td><a href="{{ item.link|default('#') }}" target="_blank">{{ item.displayLink|default('N/A') }}</a></td>
+                                                                        <td>{{ item.snippet|default('N/A')|slice(0, 100) }}{% if item.snippet|default('')|length > 100 %}...{% endif %}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Debug information -->
+                                                    <details style="margin: 10px 0; font-size: 0.8rem;">
+                                                        <summary style="cursor: pointer; color: #007acc;">Ver datos Google Search completos (debug)</summary>
+                                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.75rem; overflow: auto; max-height: 300px;">{{ result.data|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</pre>
+                                                    </details>
+
+                                                {% elseif result.source == 'alias_search' or result.source == 'Alias Search' %}
+                                                    {% set alias = result.data %}
+                                                    
+                                                    <!-- Alias Search Information -->
+                                                    {% if alias.platforms is defined %}
+                                                        <p><strong>Plataformas analizadas:</strong> {{ alias.platforms|length }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% set found_platforms = 0 %}
+                                                    {% if alias.platforms is defined %}
+                                                        {% for platform, data in alias.platforms %}
+                                                            {% if data.results is defined and data.results is not empty %}
+                                                                {% set found_platforms = found_platforms + 1 %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                    <p><strong>Plataformas con resultados:</strong> {{ found_platforms }}</p>
+                                                    
+                                                    {% if alias.platforms is defined and alias.platforms is not empty %}
+                                                        <table class="data-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Plataforma</th>
+                                                                    <th>Estado</th>
+                                                                    <th>Resultados</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for platform, data in alias.platforms %}
+                                                                    <tr>
+                                                                        <td>{{ platform|title }}</td>
+                                                                        <td>{{ (data.results is defined and data.results is not empty) ? 'Encontrado' : 'Sin resultados' }}</td>
+                                                                        <td>{{ data.results is defined ? data.results|length : 0 }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    {% endif %}
+                                                    
+                                                    {% if alias.recommendations is defined and alias.recommendations is not empty %}
+                                                        <div class="recommendations">
+                                                            <h5>💡 Recomendaciones</h5>
+                                                            <ul>
+                                                                {% for recommendation in alias.recommendations %}
+                                                                    <li>{{ recommendation }}</li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        </div>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Debug information -->
+                                                    <details style="margin: 10px 0; font-size: 0.8rem;">
+                                                        <summary style="cursor: pointer; color: #007acc;">Ver datos Alias Search completos (debug)</summary>
+                                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.75rem; overflow: auto; max-height: 300px;">{{ result.data|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</pre>
+                                                    </details>
+
+                                                {% elseif result.source == 'haveibeenpwned' or result.source == 'HaveIBeenPwned' %}
+                                                    {% set hibp = result.data %}
+                                                    
+                                                    <!-- HaveIBeenPwned Information -->
+                                                    {% if hibp.breach_count is defined %}
+                                                        <p><strong>Brechas encontradas:</strong> {{ hibp.breach_count }}</p>
+                                                    {% elseif hibp.breaches is defined %}
+                                                        <p><strong>Brechas encontradas:</strong> {{ hibp.breaches|length }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if hibp.is_breached is defined %}
+                                                        <p><strong>Estado:</strong> {{ hibp.is_breached ? 'Comprometido' : 'No comprometido' }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if hibp.risk_assessment is defined %}
+                                                        <p><strong>Evaluación de riesgo:</strong> {{ hibp.risk_assessment }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if hibp.most_recent_breach is defined %}
+                                                        <p><strong>Brecha más reciente:</strong> {{ hibp.most_recent_breach|date('d/m/Y') }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if hibp.data_classes_affected is defined and hibp.data_classes_affected is not empty %}
+                                                        <p><strong>Tipos de datos afectados:</strong> {{ hibp.data_classes_affected|join(', ') }}</p>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Breaches Table -->
+                                                    {% if hibp.breaches is defined and hibp.breaches is not empty %}
+                                                        <table class="data-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Brecha</th>
+                                                                    <th>Fecha</th>
+                                                                    <th>Afectados</th>
+                                                                    <th>Descripción</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for breach in hibp.breaches|slice(0, 10) %}
+                                                                    <tr>
+                                                                        <td>{{ breach.Name|default('N/A') }}</td>
+                                                                        <td>{{ breach.BreachDate|default('N/A') }}</td>
+                                                                        <td>{{ breach.PwnCount is defined ? (breach.PwnCount|number_format) : 'N/A' }}</td>
+                                                                        <td>{{ breach.Description|default('N/A')|slice(0, 100) }}{% if breach.Description|default('')|length > 100 %}...{% endif %}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Debug information -->
+                                                    <details style="margin: 10px 0; font-size: 0.8rem;">
+                                                        <summary style="cursor: pointer; color: #007acc;">Ver datos HaveIBeenPwned completos (debug)</summary>
+                                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.75rem; overflow: auto; max-height: 300px;">{{ result.data|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</pre>
+                                                    </details>
+
+                                                {% elseif result.source == 'dorking_search' or result.source == 'Google Dorking' %}
+                                                    {% set dorking = result.data %}
+                                                    
+                                                    <!-- Google Dorking Information -->
+                                                    {% if dorking.queries is defined %}
+                                                        <p><strong>Consultas ejecutadas:</strong> {{ dorking.queries|length }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% set total_results = 0 %}
+                                                    {% if dorking.queries is defined %}
+                                                        {% for query in dorking.queries %}
+                                                            {% if query.results is defined %}
+                                                                {% set total_results = total_results + query.results|length %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                    <p><strong>Resultados totales:</strong> {{ total_results }}</p>
+                                                    
+                                                    {% if dorking.queries is defined and dorking.queries is not empty %}
+                                                        <table class="data-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Consulta</th>
+                                                                    <th>Resultados</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for query in dorking.queries|slice(0, 5) %}
+                                                                    <tr>
+                                                                        <td style="font-family: monospace; font-size: 0.8rem;">{{ query.query|default('N/A')|slice(0, 80) }}{% if query.query|default('')|length > 80 %}...{% endif %}</td>
+                                                                        <td>{{ query.results is defined ? query.results|length : 0 }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Debug information -->
+                                                    <details style="margin: 10px 0; font-size: 0.8rem;">
+                                                        <summary style="cursor: pointer; color: #007acc;">Ver datos Google Dorking completos (debug)</summary>
+                                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.75rem; overflow: auto; max-height: 300px;">{{ result.data|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</pre>
+                                                    </details>
+
+                                                {% else %}
+                                                    <!-- Generic data display -->
+                                                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.8rem; overflow: auto;">{{ result.data|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                                                {% endif %}
+                                                
+                                                {% if result.analyzedAt %}
+                                                    <p><small><strong>Analizado:</strong> {{ result.analyzedAt|date('d/m/Y H:i:s') }}</small></p>
+                                                {% endif %}
+
+                                            {% else %}
+                                                <div class="error-message">
+                                                    <strong>Error en el análisis:</strong> {{ result.errorMessage|default('Error desconocido') }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="no-results">
+                                    <p>No hay resultados de análisis para este target.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                <h3>No hay targets en esta investigación</h3>
+                <p>Añade targets para comenzar el análisis OSINT.</p>
+            </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>SourceWeaver OSINT Platform</strong></p>
+            <p>Reporte generado el {{ exportDate|date('d/m/Y') }} a las {{ exportDate|date('H:i:s') }}</p>
+            <p>Este reporte contiene información sensible. Manéjalo de acuerdo a las políticas de seguridad.</p>
+        </div>
+    </div>
+</body>
+</html>
