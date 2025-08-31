@@ -1,15 +1,35 @@
-# OSINT Analysis Scripts Dependencies
-requests==2.31.0
-dnspython==2.4.2
-python-whois==0.8.0
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-aiofiles==23.2.1
-python-multipart==0.0.6
+# FastAPI and web framework
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic[email]>=2.5.0
+pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+email-validator>=2.0.0
+aiofiles>=23.2.1
 
-# Optional dependencies for advanced analysis
-shodan==1.30.1
-censys==2.2.10
-beautifulsoup4==4.12.2
-lxml==4.9.3
+# HTTP and networking
+requests>=2.31.0
+httpx>=0.24.0
+aiohttp>=3.8.0
+
+# DNS and network analysis
+dnspython>=2.4.2
+python-whois>=0.8.0
+
+# Security and cryptography
+cryptography>=40.0.0
+pyopenssl>=23.0.0
+
+# Data processing and analysis
+beautifulsoup4>=4.12.2
+lxml>=4.9.3
+
+# OSINT specific libraries
+shodan>=1.30.1
+censys>=2.2.10
+google-api-python-client>=2.0.0
+
+# Utilities and logging
+python-dateutil>=2.8.0
+colorama>=0.4.0
+pytz>=2024.1

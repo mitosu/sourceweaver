@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     whois \
     dnsutils \
     curl \
+    nmap \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -12,21 +14,25 @@ WORKDIR /app
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Copy scripts
-COPY . /app/scripts/
-COPY ../python_api /app/api/
+# Create necessary directories
+RUN mkdir -p /app/scripts /app/logs /app/api
 
-# Make scripts executable
-RUN chmod +x /app/scripts/*.py
+# Create non-root user for security
+RUN useradd -m -u 1000 osint \
+    && chown -R osint:osint /app
 
-# Create non-root user
-RUN useradd -m -u 1000 osint && chown -R osint:osint /app
-USER osint
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
 # Expose port for FastAPI
 EXPOSE 8001
 
+# Switch to non-root user
+USER osint
+
 # Default command to run FastAPI server
-CMD ["python", "/app/api/main.py"]
+CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]

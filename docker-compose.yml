@@ -54,6 +54,30 @@ services:
     networks:
       - symfony
 
+  python-osint:
+    build:
+      context: ./python-osint
+      dockerfile: Dockerfile
+    container_name: sourceweaver_python_osint
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID:-}
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY:-}
+      - HAVEIBEENPWNED_API_KEY=${HAVEIBEENPWNED_API_KEY:-}
+    volumes:
+      - ./python-osint:/app
+    networks:
+      - symfony
+    healthcheck:
+      test: ["CMD", "python", "/app/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   sourceweaver_db_data:
 
